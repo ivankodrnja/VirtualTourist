@@ -13,12 +13,14 @@ class TravelLoactionsMapViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var navigationBar: UINavigationBar!
+    @IBOutlet weak var editButton: UIBarButtonItem!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         restoreMapRegion(false)
+       
     }
 
     override func didReceiveMemoryWarning() {
