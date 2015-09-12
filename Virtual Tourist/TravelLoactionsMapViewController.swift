@@ -177,6 +177,7 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         
         var newAnotation = MKPointAnnotation()
         newAnotation.coordinate = newCoord
+            println(newCoord)
         mapView.addAnnotation(newAnotation)
         }
     }
