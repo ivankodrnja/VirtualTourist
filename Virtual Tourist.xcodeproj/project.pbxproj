@@ -14,6 +14,8 @@
 		83FF8EB21BA3E42500435A45 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 83FF8EB01BA3E42500435A45 /* LaunchScreen.xib */; };
 		83FF8EBE1BA3E42500435A45 /* Virtual_TouristTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8EBD1BA3E42500435A45 /* Virtual_TouristTests.swift */; };
 		83FF8EC81BA3EBD900435A45 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83FF8EC71BA3EBD900435A45 /* MapKit.framework */; };
+		83FF8ECC1BA4991100435A45 /* CoreDataStackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */; };
+		83FF8ECF1BA4996900435A45 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +40,8 @@
 		83FF8EBC1BA3E42500435A45 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		83FF8EBD1BA3E42500435A45 /* Virtual_TouristTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Virtual_TouristTests.swift; sourceTree = "<group>"; };
 		83FF8EC71BA3EBD900435A45 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStackManager.swift; sourceTree = "<group>"; };
+		83FF8ECE1BA4996900435A45 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +132,8 @@
 		83FF8ECA1BA498E100435A45 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */,
+				83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -239,6 +245,8 @@
 			files = (
 				83FF8EAA1BA3E42500435A45 /* TravelLoactionsMapViewController.swift in Sources */,
 				83FF8EA81BA3E42500435A45 /* AppDelegate.swift in Sources */,
+				83FF8ECC1BA4991100435A45 /* CoreDataStackManager.swift in Sources */,
+				83FF8ECF1BA4996900435A45 /* Model.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -444,6 +452,19 @@
 			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				83FF8ECE1BA4996900435A45 /* Model.xcdatamodel */,
+			);
+			currentVersion = 83FF8ECE1BA4996900435A45 /* Model.xcdatamodel */;
+			path = Model.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 83FF8E9A1BA3E42400435A45 /* Project object */;
 }
