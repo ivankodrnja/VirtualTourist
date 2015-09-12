@@ -81,6 +81,7 @@
 		83FF8EA41BA3E42500435A45 /* Virtual Tourist */ = {
 			isa = PBXGroup;
 			children = (
+				83FF8ECA1BA498E100435A45 /* Model */,
 				83FF8EC91BA3EC1400435A45 /* Controller */,
 				83FF8EA71BA3E42500435A45 /* AppDelegate.swift */,
 				83FF8EAB1BA3E42500435A45 /* Main.storyboard */,
@@ -122,6 +123,13 @@
 				83FF8EA91BA3E42500435A45 /* TravelLoactionsMapViewController.swift */,
 			);
 			name = Controller;
+			sourceTree = "<group>";
+		};
+		83FF8ECA1BA498E100435A45 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
