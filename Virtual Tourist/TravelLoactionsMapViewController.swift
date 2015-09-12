@@ -14,6 +14,8 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var editButton: UIBarButtonItem!
+    @IBOutlet weak var tapPinsLabel: UILabel!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,7 +36,28 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
 
+    @IBAction func editAction(sender: UIBarButtonItem) {
+
+        if(self.editButton.title == "Edit"){
+            
+            self.editButton.title = "Done"
+            UIView.animateWithDuration(0.2, animations: {
+            self.mapView.frame.origin.y -= self.tapPinsLabel.frame.height
+            })
+        
+        } else {
+            self.editButton.title = "Edit"
+            UIView.animateWithDuration(0.2, animations: {
+            self.mapView.frame.origin.y += self.tapPinsLabel.frame.height
+            })
+
+        }
+
+    }
+    
+    
     // MARK: - Save the zoom level helpers
     
     // A convenient property
