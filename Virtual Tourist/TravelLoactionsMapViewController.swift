@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
 
@@ -16,6 +17,11 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
     @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var tapPinsLabel: UILabel!
     
+    // array of pins
+    var pins = [Pin]()
+    
+    // detect edit mode
+    var editMode : Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,11 +31,22 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
         restoreMapRegion(false)
         
         // long press gesture recognizer instance
-        var longPressGR = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
+        var longPressGR = UILongPressGestureRecognizer(target: self, action: "longTap:")
         mapView.addGestureRecognizer(longPressGR)
         
         // this class is MKMapViewDelegate
         self.mapView.delegate = self
+        
+        pins = fetchAllPins()
+        
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        // add annotations from Core Data
+        self.createAnnotations()
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -39,24 +56,68 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
     
 
     @IBAction func editAction(sender: UIBarButtonItem) {
-
-        if(self.editButton.title == "Edit"){
+   
+        if(self.editMode){
             
-            self.editButton.title = "Done"
-            UIView.animateWithDuration(0.2, animations: {
-            self.mapView.frame.origin.y -= self.tapPinsLabel.frame.height
-            })
-        
-        } else {
             self.editButton.title = "Edit"
             UIView.animateWithDuration(0.2, animations: {
             self.mapView.frame.origin.y += self.tapPinsLabel.frame.height
             })
+        
+        } else {
+            self.editButton.title = "Done"
+            UIView.animateWithDuration(0.2, animations: {
+            self.mapView.frame.origin.y -= self.tapPinsLabel.frame.height
+            })
 
         }
+        self.editMode = !self.editMode
 
     }
+    // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance().managedObjectContext!
+    }
+    
+    
+    func fetchAllPins() -> [Pin] {
+        let error: NSErrorPointer = nil
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        let results = sharedContext.executeFetchRequest(fetchRequest, error: error)
+        if error != nil {
+            println("Error in fetchAllActors(): \(error)")
+        }
+        return results as! [Pin]
+    }
+    
+    func createAnnotations(){
+
+        var annotations = [MKPointAnnotation]()
+        
+        for dictionary in pins {
+            
+            // Notice that the float values are being used to create CLLocationDegree values.
+            // This is a version of the Double type.
+            let lat = CLLocationDegrees(dictionary.latitude as Double)
+            let long = CLLocationDegrees(dictionary.longitude as Double)
+            
+            // The lat and long are used to create a CLLocationCoordinates2D instance.
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+            
+            // Here we create the annotation and set its coordiate
+            var annotation = MKPointAnnotation()
+            annotation.coordinate = coordinate
+            
+            // Finally we place the annotation in an array of annotations.
+            annotations.append(annotation)
+            
+        }
+        
+        self.mapView.addAnnotations(annotations)
+    }
+    
+
     
     // MARK: - Save the zoom level helpers
     
@@ -168,21 +229,31 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         */
     }
     
-    func addAnnotation(gestureRecognizer:UIGestureRecognizer) {
-        
+    func longTap(gestureRecognizer:UIGestureRecognizer) {
+      
         if gestureRecognizer.state == .Began{
-        
-        var touchPoint = gestureRecognizer.locationInView(self.mapView)
-        var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
-        
-        var newAnotation = MKPointAnnotation()
-        newAnotation.coordinate = newCoord
-            println(newCoord)
-        mapView.addAnnotation(newAnotation)
+            // handle long tap if edit mode is not active
+            if !self.editMode{
+                var touchPoint = gestureRecognizer.locationInView(self.mapView)
+                var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+                
+                var newAnotation = MKPointAnnotation()
+                newAnotation.coordinate = newCoord
+                mapView.addAnnotation(newAnotation)
+                
+                // save the pin location
+                var locationDictionary = [String : AnyObject]()
+                locationDictionary[Pin.Keys.latitude] = newCoord.latitude
+                locationDictionary[Pin.Keys.longitude] = newCoord.longitude
+                Pin(dictionary: locationDictionary, context: sharedContext)
+                
+                CoreDataStackManager.sharedInstance().saveContext()
+            }
         }
     }
 
     // MARK: - Map delegate methods
+    
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
         let reuseId = "pin"
         
@@ -198,6 +269,13 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         }
         
         return pinView
+    }
+    
+    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+        // annotation (pin) selection is enabled only in edit mode
+        if self.editMode {
+            
+        }
     }
     
 }

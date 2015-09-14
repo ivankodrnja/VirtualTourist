@@ -1,5 +1,5 @@
 //
-//  Picture.swift
+//  Photo.swift
 //  Virtual Tourist
 //
 //  Created by Ivan Kodrnja on 12/09/15.
@@ -9,9 +9,9 @@
 import UIKit
 import CoreData
 
-@objc(Picture)
+@objc(Photo)
 
-class Picture : NSManagedObject {
+class Photo : NSManagedObject {
     
     struct Keys {
         static let ID = "id"
@@ -28,8 +28,8 @@ class Picture : NSManagedObject {
     
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
         // Core Data
-        let entity = NSEntityDescription.entityForName("Picture", inManagedObjectContext: context)
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        let entity = NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)
+        super.init(entity: entity!, insertIntoManagedObjectContext: context)
         
         // Dictionary
         url = dictionary[Keys.url] as! String

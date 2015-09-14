@@ -14,16 +14,16 @@ import CoreData
 class Pin : NSManagedObject {
     
     struct Keys {
-        static let ID = "id"
+     //   static let ID = "id"
         static let latitude = "latitude"
         static let longitude = "longitude"
         static let pictures = "pictures"
     }
     
-    @NSManaged var id : NSNumber
+   // @NSManaged var id : NSNumber
     @NSManaged var latitude : Double
     @NSManaged var longitude : Double
-    @NSManaged var pictures : [Picture]
+    @NSManaged var photos : [Photo]
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -32,12 +32,12 @@ class Pin : NSManagedObject {
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
         // Core Data
         let entity = NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        super.init(entity: entity!, insertIntoManagedObjectContext: context)
         
         // Dictionary
         latitude = dictionary[Keys.latitude] as! Double
         longitude = dictionary[Keys.longitude] as! Double
-        id = dictionary[Keys.ID] as! Int
+       // id = dictionary[Keys.ID] as! Int
     }
     
 }
