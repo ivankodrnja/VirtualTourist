@@ -17,7 +17,7 @@
 		83FF8ECC1BA4991100435A45 /* CoreDataStackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */; };
 		83FF8ECF1BA4996900435A45 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */; };
 		83FF8ED51BA4B80900435A45 /* Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED41BA4B80900435A45 /* Pin.swift */; };
-		83FF8ED71BA4BD4D00435A45 /* Picture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED61BA4BD4D00435A45 /* Picture.swift */; };
+		83FF8ED71BA4BD4D00435A45 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED61BA4BD4D00435A45 /* Photo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,7 +45,7 @@
 		83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStackManager.swift; sourceTree = "<group>"; };
 		83FF8ECE1BA4996900435A45 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 		83FF8ED41BA4B80900435A45 /* Pin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pin.swift; sourceTree = "<group>"; };
-		83FF8ED61BA4BD4D00435A45 /* Picture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Picture.swift; sourceTree = "<group>"; };
+		83FF8ED61BA4BD4D00435A45 /* Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,7 +139,7 @@
 				83FF8ECB1BA4991100435A45 /* CoreDataStackManager.swift */,
 				83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */,
 				83FF8ED41BA4B80900435A45 /* Pin.swift */,
-				83FF8ED61BA4BD4D00435A45 /* Picture.swift */,
+				83FF8ED61BA4BD4D00435A45 /* Photo.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -249,7 +249,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83FF8ED71BA4BD4D00435A45 /* Picture.swift in Sources */,
+				83FF8ED71BA4BD4D00435A45 /* Photo.swift in Sources */,
 				83FF8ED51BA4B80900435A45 /* Pin.swift in Sources */,
 				83FF8EAA1BA3E42500435A45 /* TravelLoactionsMapViewController.swift in Sources */,
 				83FF8EA81BA3E42500435A45 /* AppDelegate.swift in Sources */,
@@ -385,7 +385,7 @@
 				INFOPLIST_FILE = "Virtual Tourist/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "Virtual Tourist/Virtual Tourist-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -398,7 +398,7 @@
 				INFOPLIST_FILE = "Virtual Tourist/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "Virtual Tourist/Virtual Tourist-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 			};
 			name = Release;
 		};
@@ -455,6 +455,7 @@
 				83FF8EC31BA3E42500435A45 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		83FF8EC41BA3E42500435A45 /* Build configuration list for PBXNativeTarget "Virtual TouristTests" */ = {
 			isa = XCConfigurationList;
@@ -463,6 +464,7 @@
 				83FF8EC61BA3E42500435A45 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
