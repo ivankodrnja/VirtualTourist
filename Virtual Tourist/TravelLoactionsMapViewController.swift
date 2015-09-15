@@ -38,8 +38,6 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
         self.mapView.delegate = self
         
         pins = fetchAllPins()
-        
-        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -261,7 +259,6 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView!.canShowCallout = true
             pinView!.animatesDrop = true
             pinView!.pinColor = .Red
         } else {
@@ -273,8 +270,27 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
         // annotation (pin) selection is enabled only in edit mode
+        println(self.editMode)
         if self.editMode {
-            
+            if let pinAnnotation = view  {
+               
+                // to delete the pin, first creat an object to delete
+                let pinToDelete = pinAnnotation.annotation as! Pin
+                println("pinToDelete:\(pinToDelete)")
+                
+                // remove from context
+                sharedContext.deleteObject(pinToDelete)
+                CoreDataStackManager.sharedInstance().saveContext()
+                
+
+            }
+        } else {
+            // segue to the photos view
+            println("Show photos view")
+            /*
+            self.selectedPin = view.annotation as? MapPinAnnotation
+            self.performSegueWithIdentifier("galerySegue", sender: self)
+                */
         }
     }
     
