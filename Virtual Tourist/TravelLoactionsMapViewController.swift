@@ -10,17 +10,14 @@ import UIKit
 import MapKit
 import CoreData
 
-class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
+class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var tapPinsLabel: UILabel!
     
-    // array of pins
-    var pins = [Pin]()
-    
-    // detect edit mode
+    // will serve foe edit mode detection
     var editMode : Bool = false
     
     override func viewDidLoad() {
@@ -37,14 +34,12 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
         // this class is MKMapViewDelegate
         self.mapView.delegate = self
         
-        pins = fetchAllPins()
-    }
-    
-    override func viewWillAppear(animated: Bool) {
+        fetchedResultsController.performFetch(nil)
+        // this class is NSFetchedResultsControllerDelegate
+        fetchedResultsController.delegate = self
         
         // add annotations from Core Data
         self.createAnnotations()
-        
     }
 
     override func didReceiveMemoryWarning() {
@@ -70,6 +65,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
 
         }
         self.editMode = !self.editMode
+        
 
     }
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
@@ -78,37 +74,30 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate {
         return CoreDataStackManager.sharedInstance().managedObjectContext!
     }
     
-    
-    func fetchAllPins() -> [Pin] {
-        let error: NSErrorPointer = nil
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
         let fetchRequest = NSFetchRequest(entityName: "Pin")
-        let results = sharedContext.executeFetchRequest(fetchRequest, error: error)
-        if error != nil {
-            println("Error in fetchAllActors(): \(error)")
-        }
-        return results as! [Pin]
-    }
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+        
+        }()
     
     func createAnnotations(){
-
-        var annotations = [MKPointAnnotation]()
         
-        for dictionary in pins {
+        var annotations = [Pin]()
+        
+        if let locations = fetchedResultsController.fetchedObjects {
+            for location in locations {
+                annotations.append(location as! Pin)
+            }
             
-            // Notice that the float values are being used to create CLLocationDegree values.
-            // This is a version of the Double type.
-            let lat = CLLocationDegrees(dictionary.latitude as Double)
-            let long = CLLocationDegrees(dictionary.longitude as Double)
-            
-            // The lat and long are used to create a CLLocationCoordinates2D instance.
-            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
-            
-            // Here we create the annotation and set its coordiate
-            var annotation = MKPointAnnotation()
-            annotation.coordinate = coordinate
-            
-            // Finally we place the annotation in an array of annotations.
-            annotations.append(annotation)
             
         }
         
@@ -235,15 +224,12 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
                 var touchPoint = gestureRecognizer.locationInView(self.mapView)
                 var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
                 
-                var newAnotation = MKPointAnnotation()
-                newAnotation.coordinate = newCoord
-                mapView.addAnnotation(newAnotation)
-                
                 // save the pin location
                 var locationDictionary = [String : AnyObject]()
                 locationDictionary[Pin.Keys.latitude] = newCoord.latitude
                 locationDictionary[Pin.Keys.longitude] = newCoord.longitude
-                Pin(dictionary: locationDictionary, context: sharedContext)
+                let pin = Pin(dictionary: locationDictionary, context: sharedContext)
+                mapView.addAnnotation(pin)
                 
                 CoreDataStackManager.sharedInstance().saveContext()
             }
@@ -292,6 +278,25 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
             self.performSegueWithIdentifier("galerySegue", sender: self)
                 */
         }
+    }
+    
+    // MARK: - NSFetchedResultsController delegate methods
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        let pin = anObject as! Pin
+        
+        
+        switch (type){
+        case .Insert:
+            mapView.addAnnotation(pin)
+            
+        case .Delete:
+            mapView.removeAnnotation(pin)
+            
+        default:
+            return
+        }
+        
     }
     
 }
