@@ -13,9 +13,8 @@ import CoreData
 class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
-    @IBOutlet weak var navigationBar: UINavigationBar!
-    @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var tapPinsLabel: UILabel!
+    
     
     // will serve foe edit mode detection
     var editMode : Bool = false
@@ -23,6 +22,8 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .Plain, target: self, action: "editAction")
         
         // method for getting the map's state before app exited
         restoreMapRegion(false)
@@ -40,6 +41,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         
         // add annotations from Core Data
         self.createAnnotations()
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -48,17 +50,17 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
 
-    @IBAction func editAction(sender: UIBarButtonItem) {
+    func editAction() {
    
         if(self.editMode){
             
-            self.editButton.title = "Edit"
+            self.navigationItem.rightBarButtonItem?.title = "Edit"
             UIView.animateWithDuration(0.2, animations: {
             self.mapView.frame.origin.y += self.tapPinsLabel.frame.height
             })
         
         } else {
-            self.editButton.title = "Done"
+            self.navigationItem.rightBarButtonItem?.title = "Done"
             UIView.animateWithDuration(0.2, animations: {
             self.mapView.frame.origin.y -= self.tapPinsLabel.frame.height
             })
@@ -165,77 +167,69 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         saveMapRegion()
     }
     
-    
-    @IBAction func longTapAction(sender: UILongPressGestureRecognizer) {
-        /*
-        //Get the current state of the GestureRecognizer
-        let state = sender.state
-        
-        //If the touch has begun recognzing (after 0.5s)
-        if state == .Began {
-            
-            //Get the spot that was pressed.
-            let tapPoint: CGPoint = sender.locationInView(mapView)
-            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
-            
-            //Create an annotation object
-            droppedPin = LocationPin(pin: nil, coordinate: touchMapCoordinate)
-            
-            //Add annotation to map
-            dispatch_async(dispatch_get_main_queue(), {
-                self.mapView.addAnnotation(self.droppedPin)
-            })
-        }
-            
-            //If the touch has moved / changed once the touch has began
-        else if state == .Changed {
-            
-            //Check to make sure the pin has dropped
-            if droppedPin != nil {
-                
-                //Get the coordinates from the map where we dragged over
-                let tapPoint: CGPoint = sender.locationInView(mapView)
-                let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
-                
-                //Update the pin view
-                dispatch_async(dispatch_get_main_queue(), {
-                    self.droppedPin.coordinate = touchMapCoordinate
-                })
-            }
-        }
-            
-            //If the touch has now ended
-        else if state == .Ended {
-            //Create the Pin entity
-            let pin = Pin(coords: droppedPin.coordinate, context: sharedContext)
-            
-            //Assign the pin to the droppedPin
-            droppedPin.pin = pin
-            //Save pin and fetch images...
-        }
-        */
-    }
-    
     func longTap(gestureRecognizer:UIGestureRecognizer) {
-      
-        if gestureRecognizer.state == .Began{
-            // handle long tap if edit mode is not active
-            if !self.editMode{
-                var touchPoint = gestureRecognizer.locationInView(self.mapView)
-                var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+        var pin : Pin? = nil
+        
+        // handle long tap if edit mode is not active
+        if !self.editMode{
+            if gestureRecognizer.state == .Began {
                 
-                // save the pin location
-                var locationDictionary = [String : AnyObject]()
-                locationDictionary[Pin.Keys.latitude] = newCoord.latitude
-                locationDictionary[Pin.Keys.longitude] = newCoord.longitude
-                let pin = Pin(dictionary: locationDictionary, context: sharedContext)
-                mapView.addAnnotation(pin)
+                    var touchPoint = gestureRecognizer.locationInView(self.mapView)
+                    var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+                    
+                    // create a pin
+                    var locationDictionary = [String : AnyObject]()
+                    locationDictionary[Pin.Keys.latitude] = newCoord.latitude
+                    locationDictionary[Pin.Keys.longitude] = newCoord.longitude
+                    pin = Pin(dictionary: locationDictionary, context: sharedContext)
                 
-                CoreDataStackManager.sharedInstance().saveContext()
+                    // add the pin to the map
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.mapView.addAnnotation(pin)
+                     })
+                
+                
+                }
+            
+            else if gestureRecognizer.state == .Changed {
+                
+                // check if the pin is created
+                if pin != nil {
+                    // get the new coordinates for the dragged pin
+                    var touchPoint = gestureRecognizer.locationInView(self.mapView)
+                    var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+                    
+                    // update the pin view
+                    dispatch_async(dispatch_get_main_queue(), {
+                        pin!.coordinate = newCoord
+                    })
+                }
             }
+            
+            else if gestureRecognizer.state == .Ended {
+                // save pin
+                CoreDataStackManager.sharedInstance().saveContext()
+                
+                // prefetch images??
+            }
+            
         }
     }
 
+    
+    // MARK: - Navigation
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    // Get the new view controller using segue.destinationViewController.
+    // Pass the selected object to the new view controller.
+        if(segue.identifier == "showPhotos"){
+            let photoAlbumVC:PhotoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
+
+        }
+    
+    }
+
+    
     // MARK: - Map delegate methods
     
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
@@ -256,7 +250,6 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
         // annotation (pin) selection is enabled only in edit mode
-        println(self.editMode)
         if self.editMode {
             if let pinAnnotation = view  {
                
@@ -267,16 +260,16 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
                 // remove from context
                 sharedContext.deleteObject(pinToDelete)
                 CoreDataStackManager.sharedInstance().saveContext()
-                
 
             }
         } else {
+            
+            let deselectedPin = view.annotation as! Pin
+            mapView.deselectAnnotation(deselectedPin, animated: false)
             // segue to the photos view
             println("Show photos view")
-            /*
-            self.selectedPin = view.annotation as? MapPinAnnotation
-            self.performSegueWithIdentifier("galerySegue", sender: self)
-                */
+            self.performSegueWithIdentifier("showPhotos", sender: self)
+            
         }
     }
     
@@ -284,7 +277,6 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         let pin = anObject as! Pin
-        
         
         switch (type){
         case .Insert:
