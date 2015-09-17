@@ -18,6 +18,7 @@
 		83FF8ECF1BA4996900435A45 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ECD1BA4996900435A45 /* Model.xcdatamodeld */; };
 		83FF8ED51BA4B80900435A45 /* Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED41BA4B80900435A45 /* Pin.swift */; };
 		83FF8ED71BA4BD4D00435A45 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED61BA4BD4D00435A45 /* Photo.swift */; };
+		83FF8ED91BAB3CA300435A45 /* PhotoAlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FF8ED81BAB3CA300435A45 /* PhotoAlbumViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		83FF8ECE1BA4996900435A45 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 		83FF8ED41BA4B80900435A45 /* Pin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pin.swift; sourceTree = "<group>"; };
 		83FF8ED61BA4BD4D00435A45 /* Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
+		83FF8ED81BAB3CA300435A45 /* PhotoAlbumViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoAlbumViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				83FF8EA91BA3E42500435A45 /* TravelLoactionsMapViewController.swift */,
+				83FF8ED81BAB3CA300435A45 /* PhotoAlbumViewController.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -250,6 +253,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83FF8ED71BA4BD4D00435A45 /* Photo.swift in Sources */,
+				83FF8ED91BAB3CA300435A45 /* PhotoAlbumViewController.swift in Sources */,
 				83FF8ED51BA4B80900435A45 /* Pin.swift in Sources */,
 				83FF8EAA1BA3E42500435A45 /* TravelLoactionsMapViewController.swift in Sources */,
 				83FF8EA81BA3E42500435A45 /* AppDelegate.swift in Sources */,
