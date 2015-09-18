@@ -114,6 +114,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="j59-Ig-UwF" firstAttribute="top" secondItem="mdI-hT-f77" secondAttribute="bottom" constant="53" id="1BQ-us-wBl"/>
+                            <constraint firstItem="mdI-hT-f77" firstAttribute="top" secondItem="vTt-EJ-Qhe" secondAttribute="bottom" constant="-2" id="EA7-A8-3gv"/>
                             <constraint firstItem="vTt-EJ-Qhe" firstAttribute="leading" secondItem="UfN-nE-5Q2" secondAttribute="leading" id="EvQ-bD-1Do"/>
                             <constraint firstItem="mdI-hT-f77" firstAttribute="leading" secondItem="vTt-EJ-Qhe" secondAttribute="leading" id="JQT-2k-4AS"/>
                             <constraint firstItem="j59-Ig-UwF" firstAttribute="top" secondItem="vTt-EJ-Qhe" secondAttribute="bottom" constant="389" id="SQO-Q3-wlK"/>
@@ -123,6 +124,9 @@
                             <constraint firstItem="vTt-EJ-Qhe" firstAttribute="top" secondItem="HAZ-QY-21C" secondAttribute="bottom" id="phG-y2-Zh1"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="mapView" destination="vTt-EJ-Qhe" id="KWd-LJ-QoO"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="0Fr-gu-h4I" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

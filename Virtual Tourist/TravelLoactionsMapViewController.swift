@@ -15,9 +15,10 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var tapPinsLabel: UILabel!
     
-    
-    // will serve foe edit mode detection
+    // will serve for edit mode detection
     var editMode : Bool = false
+    // will serve to detect the exct pin that was selected when transitioning to PhotoAlbum
+    var selectedPin : Pin!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -224,7 +225,7 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     // Pass the selected object to the new view controller.
         if(segue.identifier == "showPhotos"){
             let photoAlbumVC:PhotoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
-
+            photoAlbumVC.selectedPin = self.selectedPin
         }
     
     }
@@ -264,8 +265,9 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
             }
         } else {
             
-            let deselectedPin = view.annotation as! Pin
-            mapView.deselectAnnotation(deselectedPin, animated: false)
+            let touchedPin = view.annotation as! Pin
+            self.selectedPin = touchedPin
+            mapView.deselectAnnotation(touchedPin, animated: false)
             // segue to the photos view
             println("Show photos view")
             self.performSegueWithIdentifier("showPhotos", sender: self)
