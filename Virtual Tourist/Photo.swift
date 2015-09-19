@@ -14,11 +14,9 @@ import CoreData
 class Photo : NSManagedObject {
     
     struct Keys {
-        static let ID = "id"
-        static let url = "url"
+        static let url = "url_m"
     }
     
-    @NSManaged var id : NSNumber
     @NSManaged var url : String
     @NSManaged var pin : Pin?
     
@@ -33,7 +31,6 @@ class Photo : NSManagedObject {
         
         // Dictionary
         url = dictionary[Keys.url] as! String
-        id = dictionary[Keys.ID] as! Int
     }
     
 }

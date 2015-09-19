@@ -18,7 +18,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     // will serve for edit mode detection
     var editMode : Bool = false
     // will serve to detect the exct pin that was selected when transitioning to PhotoAlbum
-    var selectedPin : Pin!
+    var droppedPin : Pin!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -169,8 +169,6 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     }
     
     func longTap(gestureRecognizer:UIGestureRecognizer) {
-        var pin : Pin? = nil
-        
         // handle long tap if edit mode is not active
         if !self.editMode{
             if gestureRecognizer.state == .Began {
@@ -182,11 +180,11 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
                     var locationDictionary = [String : AnyObject]()
                     locationDictionary[Pin.Keys.latitude] = newCoord.latitude
                     locationDictionary[Pin.Keys.longitude] = newCoord.longitude
-                    pin = Pin(dictionary: locationDictionary, context: sharedContext)
+                    self.droppedPin = Pin(dictionary: locationDictionary, context: sharedContext)
                 
                     // add the pin to the map
                     dispatch_async(dispatch_get_main_queue(), {
-                        self.mapView.addAnnotation(pin)
+                        self.mapView.addAnnotation(self.droppedPin)
                      })
                 
                 
@@ -195,23 +193,43 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
             else if gestureRecognizer.state == .Changed {
                 
                 // check if the pin is created
-                if pin != nil {
+                if droppedPin != nil {
                     // get the new coordinates for the dragged pin
                     var touchPoint = gestureRecognizer.locationInView(self.mapView)
                     var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
                     
                     // update the pin view
                     dispatch_async(dispatch_get_main_queue(), {
-                        pin!.coordinate = newCoord
+                        self.droppedPin!.coordinate = newCoord
                     })
                 }
             }
             
             else if gestureRecognizer.state == .Ended {
-                // save pin
+
+                
+                // prefetch images
+                FlickrClient.sharedInstance().getPhotos(self.droppedPin){(result, error) in
+                    if error == nil {
+                        
+                        // Parse the array of photos dictionaries
+                        var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
+                            
+                            let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                            // set the relationship
+                            photo.pin = self.droppedPin
+                            return photo
+                        }
+
+                    } else {
+                        // TODO: handle error
+                        println("error")
+                    }
+                }
+                
+                // save data
                 CoreDataStackManager.sharedInstance().saveContext()
                 
-                // prefetch images??
             }
             
         }
@@ -225,7 +243,7 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     // Pass the selected object to the new view controller.
         if(segue.identifier == "showPhotos"){
             let photoAlbumVC:PhotoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
-            photoAlbumVC.selectedPin = self.selectedPin
+            photoAlbumVC.selectedPin = self.droppedPin
         }
     
     }
@@ -266,7 +284,7 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
         } else {
             
             let touchedPin = view.annotation as! Pin
-            self.selectedPin = touchedPin
+            self.droppedPin = touchedPin
             mapView.deselectAnnotation(touchedPin, animated: false)
             // segue to the photos view
             println("Show photos view")
@@ -294,4 +312,3 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
     }
     
 }
-
