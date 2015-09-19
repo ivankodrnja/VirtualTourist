@@ -302,7 +302,6 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
             self.droppedPin = touchedPin
             mapView.deselectAnnotation(touchedPin, animated: false)
             // segue to the photos view
-            println("Show photos view")
             self.performSegueWithIdentifier("showPhotos", sender: self)
             
         }

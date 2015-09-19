@@ -117,15 +117,16 @@
                                             <rect key="frame" x="0.0" y="0.0" width="168" height="151"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="kV8-3g-l4z">
+                                                    <rect key="frame" x="74" y="66" width="20" height="20"/>
+                                                </activityIndicatorView>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="IOZ-sU-ijk">
                                                     <rect key="frame" x="0.0" y="0.0" width="168" height="151"/>
                                                 </imageView>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="kV8-3g-l4z">
-                                                    <rect key="frame" x="74" y="66" width="20" height="20"/>
-                                                </activityIndicatorView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="IOZ-sU-ijk" secondAttribute="trailing" id="0FH-Pj-aHG"/>
                                             <constraint firstItem="kV8-3g-l4z" firstAttribute="centerX" secondItem="IOZ-sU-ijk" secondAttribute="centerX" id="0xe-s0-uVG"/>

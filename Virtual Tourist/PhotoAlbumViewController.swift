@@ -215,8 +215,6 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         
-        println("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
-        
         //Check to make sure UI elements are correctly displayed.
         if controller.fetchedObjects?.count > 0 {
             

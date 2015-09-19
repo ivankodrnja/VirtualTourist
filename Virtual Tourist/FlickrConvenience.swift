@@ -117,35 +117,4 @@ extension FlickrClient {
         /* 7. Start the request */
         task.resume()
     }
-    
-    /*
-    func createBoundingBoxString(selectedPin : Pin!) -> String {
-        
-        let latitude = selectedPin.coordinate.latitude
-        let longitude = selectedPin.coordinate.longitude
-        
-        /* Fix added to ensure box is bounded by minimum and maximums */
-        let bottom_left_lon = max(longitude - FlickrClient.Constants.boundingBoxHalfWidth, FlickrClient.Constants.longitudeMin)
-        let bottom_left_lat = max(latitude - FlickrClient.Constants.boundingBoxHalfHeight, FlickrClient.Constants.latitudeMin)
-        let top_right_lon = min(longitude + FlickrClient.Constants.boundingBoxHalfHeight, FlickrClient.Constants.longitudeMax)
-        let top_right_lat = min(latitude + FlickrClient.Constants.boundingBoxHalfHeight, FlickrClient.Constants.latitudeMax)
-        
-        return "\(bottom_left_lon),\(bottom_left_lat),\(top_right_lon),\(top_right_lat)"
-    }
-    */
-    /*
-    // Parsing the JSON
-    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
-        var parsingError: NSError? = nil
-        
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
-        
-        if let error = parsingError {
-            completionHandler(result: nil, error: error)
-        } else {
-            println("Step 4 - parseJSONWithCompletionHandler is invoked.")
-            completionHandler(result: parsedResult, error: nil)
-        }
-    }
-    */
 }
