@@ -15,7 +15,6 @@ import MapKit
 class Pin : NSManagedObject, MKAnnotation {
     
     struct Keys {
-     //   static let ID = "id"
         static let latitude = "latitude"
         static let longitude = "longitude"
         static let pictures = "pictures"
@@ -38,7 +37,6 @@ class Pin : NSManagedObject, MKAnnotation {
         // Dictionary
         latitude = dictionary[Keys.latitude] as! Double
         longitude = dictionary[Keys.longitude] as! Double
-       // id = dictionary[Keys.ID] as! Int
     }
     
     // MARK - MKAnnotation

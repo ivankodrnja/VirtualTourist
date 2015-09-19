@@ -74,6 +74,51 @@ extension FlickrClient {
     }
     
     
+    func getPhotoForImageUrl(photo : Photo,completionHandler: (success: Bool, error: NSError?) -> Void) {
+        
+        /* 1. Set the parameters */
+        // there ar eno parameters
+        
+        /* 2. Build the URL */
+        let urlString = photo.imageUrl
+        let url = NSURL(string: urlString)!
+        
+        /* 3. Configure the request */
+        let request = NSMutableURLRequest(URL: url)
+        
+        /* 4. Make the request */
+        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+            
+            if let error = downloadError {
+                
+                completionHandler(success: false, error: error)
+            } else {
+                /* 5. Parse the data */
+                if let result = data {
+                
+                    /* 6. Use the data! */
+                    //  Make a fileURL for it
+                    let fileName = urlString.lastPathComponent 
+                    let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+                    let pathArray = [dirPath, fileName]
+                    let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+                    
+                    // Save it
+                    NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: result, attributes: nil)
+                    
+                    // Update the Photo managed object with the file path.
+                    photo.imageFilename = fileURL.path
+                    
+                    completionHandler(success: true, error: nil)
+                }
+
+            }
+        }
+        /* 7. Start the request */
+        task.resume()
+    }
+    
+    /*
     func createBoundingBoxString(selectedPin : Pin!) -> String {
         
         let latitude = selectedPin.coordinate.latitude
@@ -87,7 +132,7 @@ extension FlickrClient {
         
         return "\(bottom_left_lon),\(bottom_left_lat),\(top_right_lon),\(top_right_lat)"
     }
-    
+    */
     /*
     // Parsing the JSON
     class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {

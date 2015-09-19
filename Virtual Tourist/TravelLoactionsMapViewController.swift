@@ -215,9 +215,24 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
                         // Parse the array of photos dictionaries
                         var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                             
-                            let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                            let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.sharedContext)
                             // set the relationship
-                            photo.pin = self.droppedPin
+                            //photo.pin = self.droppedPin
+                            
+                            FlickrClient.sharedInstance().getPhotoForImageUrl(photo){(success, error) in
+                                
+                                if error == nil {
+                                    
+                                    dispatch_async(dispatch_get_main_queue(), {
+                                        CoreDataStackManager.sharedInstance().saveContext()
+                                    })
+                                    
+                                } else {
+                                    // TODO: handle error
+                                    println("error")
+                                }
+                            }
+                            
                             return photo
                         }
 

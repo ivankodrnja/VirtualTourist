@@ -15,13 +15,13 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var bottomButton: UIBarButtonItem!
+    @IBOutlet weak var noImagesLabel: UILabel!
     
     var selectedPin : Pin!
     var page : Int = 1
     
     // The selected indexes array keeps all of the indexPaths for cells that are "selected"
     var selectedIndexes = [NSIndexPath]()
-    
     // Keep the changes. We will keep track of insertions, deletions, and updates.
     var insertedIndexPaths: [NSIndexPath]!
     var deletedIndexPaths: [NSIndexPath]!
@@ -39,11 +39,19 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         self.mapView.scrollEnabled = false
         self.mapView.userInteractionEnabled = false
         
-        fetchedResultsController.performFetch(nil)
         // this class is NSFetchedResultsControllerDelegate
         fetchedResultsController.delegate = self
-        
-        updateBottomButton()
+        var error: NSError?
+        fetchedResultsController.performFetch(&error)
+        if let error = error {
+            println("There was an error")
+        }
+
+        // check if there are available photos associted with the pin, and if no act accordingly
+        if fetchedResultsController.fetchedObjects?.count == 0 {
+            self.noImagesLabel.hidden = false
+            bottomButton.enabled = false
+        }
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -56,11 +64,11 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // Lay out the collection view so that cells take up 1/3 of the width,
         // with no space in between.
         let layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        layout.sectionInset = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         layout.minimumLineSpacing = 5
         layout.minimumInteritemSpacing = 5
         
-        let width = floor((self.collectionView.frame.size.width-10)/3)
+        let width = floor((self.collectionView.frame.size.width-20)/3)
         layout.itemSize = CGSize(width: width, height: width)
         collectionView.collectionViewLayout = layout
     }
@@ -74,7 +82,6 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
         let fetchRequest = NSFetchRequest(entityName: "Photo")
-        
         fetchRequest.sortDescriptors = []
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
         
@@ -103,12 +110,6 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     func configureCell(cell: PhotoCell, atIndexPath indexPath: NSIndexPath) {
         
-        let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-        
-        let url = NSURL(string: photo.url)
-        let data = NSData(contentsOfURL: url!)
-        cell.imageView.image = UIImage(data: data!)
-        
         // If the cell is "selected" it's color panel is grayed out
         // we use the Swift `find` function to see if the indexPath is in the array
         
@@ -120,11 +121,6 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     }
     
     // MARK: collection view
-    
-    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return self.fetchedResultsController.sections?.count ?? 0
-    }
-    
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
         
@@ -135,14 +131,45 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
         
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        
+        // if there is an image, update the cell appropriately
+        if photo.image != nil {
+            
+            cell.activityView.stopAnimating()
+            cell.imageView.alpha = 0.0
+            cell.imageView.image = photo.image
+            
+            UIView.animateWithDuration(0.2,
+                animations: { cell.imageView.alpha = 1.0 })
+        }
+        // modify the cell if the user has tapped it
         self.configureCell(cell, atIndexPath: indexPath)
         
         return cell
     }
     
+    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+        return self.fetchedResultsController.sections?.count ?? 0
+    }
+    
+    func collectionView(collectionView: UICollectionView, shouldSelectItemAtIndexPath indexPath: NSIndexPath) -> Bool {
+        
+        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
+        
+        //Disallow selection if the cell is waiting for its image to appear.
+        if cell.activityView.isAnimating() {
+            
+            return false
+        }
+        
+        return true
+    }
+    
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
         let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
+
         
         // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
         if let index = find(selectedIndexes, indexPath) {
@@ -190,6 +217,13 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         
         println("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
         
+        //Check to make sure UI elements are correctly displayed.
+        if controller.fetchedObjects?.count > 0 {
+            
+            noImagesLabel.hidden = true
+            bottomButton.enabled = true
+        }
+        //Make the relevant updates to the collectionView once Core Data has finished its changes.
         collectionView.performBatchUpdates({() -> Void in
             
             for indexPath in self.insertedIndexPaths {
@@ -210,16 +244,30 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     @IBAction func bottomButtonClicked() {
         
-        if selectedIndexes.isEmpty {
-            
+        if selectedIndexes.count == 0 {
+            updateBottomButton()
             newPhotoCollection()
         } else {
             deleteSelectedPhotos()
+            
+            updateBottomButton()
+            
+            CoreDataStackManager.sharedInstance().saveContext()
         }
     }
     
     func newPhotoCollection(){
+        bottomButton.enabled = false
+        
         page += 1
+        
+        // delete existing photos
+        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
+            sharedContext.deleteObject(photo)
+        }
+        
+        CoreDataStackManager.sharedInstance().saveContext()
+        
         
         FlickrClient.sharedInstance().getPhotos(selectedPin, pageNumber: page){(result, error) in
             
@@ -228,12 +276,24 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 // Parse the array of photos dictionaries
                 var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                     
-                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                    let photo = Photo(dictionary: dictionary, pin: self.selectedPin, context: self.sharedContext)
                     // set the relationship
-                    photo.pin = self.selectedPin
-                    
-                    // save data
-                    CoreDataStackManager.sharedInstance().saveContext()
+                    //photo.pin = self.selectedPin
+                    FlickrClient.sharedInstance().getPhotoForImageUrl(photo){(success, error) in
+                        
+                        if error == nil {
+                            
+                            dispatch_async(dispatch_get_main_queue(), {
+                                CoreDataStackManager.sharedInstance().saveContext()
+                                self.bottomButton.enabled = true
+                            })
+                            
+                        } else {
+                            // TODO: handle error
+                            println("error")
+                            self.bottomButton.enabled = true
+                        }
+                    }
                     
                     return photo
                 }
@@ -242,8 +302,10 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 // TODO: handle error
                 println("error")
             }
-            
         }
+        // save data
+        CoreDataStackManager.sharedInstance().saveContext()
+        
         
     }
     
@@ -257,8 +319,8 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         for photo in photosToDelete {
             sharedContext.deleteObject(photo)
         }
-        
-        selectedIndexes = [NSIndexPath]()
+        // remove the deleted image indexes
+        selectedIndexes = []
     }
     
     func updateBottomButton() {

@@ -14,23 +14,54 @@ import CoreData
 class Photo : NSManagedObject {
     
     struct Keys {
-        static let url = "url_m"
+        static let imageUrl = "url_m"
     }
     
-    @NSManaged var url : String
+    @NSManaged var imageFilename : String?
+    @NSManaged var imageUrl : String
     @NSManaged var pin : Pin?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
+    init(dictionary: [String : AnyObject], pin: Pin, context: NSManagedObjectContext) {
         // Core Data
         let entity = NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)
         super.init(entity: entity!, insertIntoManagedObjectContext: context)
         
         // Dictionary
-        url = dictionary[Keys.url] as! String
+        self.imageUrl = dictionary[Keys.imageUrl] as! String
+        
+        self.pin = pin
+    }
+
+    
+    var image: UIImage? {
+        
+        if let imageFilename = imageFilename {
+            
+            let fileName = imageFilename.lastPathComponent
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+            let pathArray = [dirPath, fileName]
+            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            
+            return UIImage(contentsOfFile: fileURL.path!)
+        }
+        return nil
+    }
+    
+    
+    override func prepareForDeletion() {
+        //Delete the associated image file when the Photo managed object is deleted.
+        if let fileName = imageFilename?.lastPathComponent {
+            
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+            let pathArray = [dirPath, fileName]
+            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            
+            NSFileManager.defaultManager().removeItemAtURL(fileURL, error: nil)
+        }
     }
     
 }
