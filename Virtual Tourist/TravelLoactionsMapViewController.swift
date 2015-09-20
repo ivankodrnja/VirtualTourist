@@ -106,108 +106,35 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         
         self.mapView.addAnnotations(annotations)
     }
-    
 
-    
-    // MARK: - Save the zoom level helpers
-    
-    // A convenient property
-    var filePath : String {
-        let manager = NSFileManager.defaultManager()
-        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
-        return url.URLByAppendingPathComponent("mapRegionArchive").path!
-    }
-    
-    func saveMapRegion() {
-        
-        // Place the "center" and "span" of the map into a dictionary
-        // The "span" is the width and height of the map in degrees.
-        // It represents the zoom level of the map.
-        
-        let dictionary = [
-            "latitude" : mapView.region.center.latitude,
-            "longitude" : mapView.region.center.longitude,
-            "latitudeDelta" : mapView.region.span.latitudeDelta,
-            "longitudeDelta" : mapView.region.span.longitudeDelta
-        ]
-        
-        // Archive the dictionary into the filePath
-        NSKeyedArchiver.archiveRootObject(dictionary, toFile: filePath)
-    }
-    
-    func restoreMapRegion(animated: Bool) {
-        
-        // if we can unarchive a dictionary, we will use it to set the map back to its
-        // previous center and span
-        if let regionDictionary = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath) as? [String : AnyObject] {
-            
-            let longitude = regionDictionary["longitude"] as! CLLocationDegrees
-            let latitude = regionDictionary["latitude"] as! CLLocationDegrees
-            let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-            
-            let longitudeDelta = regionDictionary["latitudeDelta"] as! CLLocationDegrees
-            let latitudeDelta = regionDictionary["longitudeDelta"] as! CLLocationDegrees
-            let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
-            
-            let savedRegion = MKCoordinateRegion(center: center, span: span)
-            
-            mapView.setRegion(savedRegion, animated: animated)
-        }
-    }
-}
-
-/**
-*  This extension comforms to the MKMapViewDelegate protocol. This allows
-*  the view controller to be notified whenever the map region changes. So
-*  that it can save the new region.
-*/
-
-extension TravelLoactionsMapViewController : MKMapViewDelegate {
-    
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
-        saveMapRegion()
-    }
+     // MARK: - Long Tap
     
     func longTap(gestureRecognizer:UIGestureRecognizer) {
         // handle long tap if edit mode is not active
         if !self.editMode{
-            if gestureRecognizer.state == .Began {
-                
-                    var touchPoint = gestureRecognizer.locationInView(self.mapView)
-                    var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
-                    
-                    // create a pin
-                    var locationDictionary = [String : AnyObject]()
-                    locationDictionary[Pin.Keys.latitude] = newCoord.latitude
-                    locationDictionary[Pin.Keys.longitude] = newCoord.longitude
-                    self.droppedPin = Pin(dictionary: locationDictionary, context: sharedContext)
-                
-                    // add the pin to the map
-                    dispatch_async(dispatch_get_main_queue(), {
-                        self.mapView.addAnnotation(self.droppedPin)
-                     })
-                
-                
-                }
             
-            else if gestureRecognizer.state == .Changed {
-                
-                // check if the pin is created
-                if droppedPin != nil {
-                    // get the new coordinates for the dragged pin
-                    var touchPoint = gestureRecognizer.locationInView(self.mapView)
-                    var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
-                    
-                    // update the pin view
-                    dispatch_async(dispatch_get_main_queue(), {
-                        self.droppedPin!.coordinate = newCoord
-                    })
-                }
-            }
+            // coordinates of a point the user touched on the map
+            var touchPoint = gestureRecognizer.locationInView(self.mapView)
+            var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
             
-            else if gestureRecognizer.state == .Ended {
-
+            switch gestureRecognizer.state {
+            case .Began:
+                // create a pin
+                var locationDictionary = [String : AnyObject]()
+                locationDictionary[Pin.Keys.latitude] = newCoord.latitude
+                locationDictionary[Pin.Keys.longitude] = newCoord.longitude
+                self.droppedPin = Pin(dictionary: locationDictionary, context: sharedContext)
                 
+                // add the pin to the map
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.mapView.addAnnotation(self.droppedPin)
+                })
+            case .Changed:
+                droppedPin.willChangeValueForKey("coordinate")
+                droppedPin.coordinate = newCoord
+                droppedPin.didChangeValueForKey("coordinate")
+                
+            case .Ended:
                 // prefetch images
                 FlickrClient.sharedInstance().getPhotos(self.droppedPin){(result, error) in
                     if error == nil {
@@ -235,15 +162,17 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
                             
                             return photo
                         }
-
+                        
                     } else {
                         // TODO: handle error
                         println("error")
                     }
                 }
-                
                 // save data
                 CoreDataStackManager.sharedInstance().saveContext()
+                
+            default:
+                return
                 
             }
             
@@ -265,6 +194,10 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
 
     
     // MARK: - Map delegate methods
+    
+    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+        saveMapRegion()
+    }
     
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
         let reuseId = "pin"
@@ -321,6 +254,70 @@ extension TravelLoactionsMapViewController : MKMapViewDelegate {
             
         default:
             return
+        }
+        
+    }
+    
+    // MARK: - Save the zoom level helpers
+    
+    // A convenient property
+    var filePath : String {
+        let manager = NSFileManager.defaultManager()
+        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
+        return url.URLByAppendingPathComponent("mapRegionArchive").path!
+    }
+    
+    func saveMapRegion() {
+        
+        // Place the "center" and "span" of the map into a dictionary
+        // The "span" is the width and height of the map in degrees.
+        // It represents the zoom level of the map.
+        
+        let dictionary = [
+            "latitude" : mapView.region.center.latitude,
+            "longitude" : mapView.region.center.longitude,
+            "latitudeDelta" : mapView.region.span.latitudeDelta,
+            "longitudeDelta" : mapView.region.span.longitudeDelta
+        ]
+        
+        // Archive the dictionary into the filePath
+        NSKeyedArchiver.archiveRootObject(dictionary, toFile: filePath)
+    }
+    
+    func restoreMapRegion(animated: Bool) {
+        
+        // if we can unarchive a dictionary, we will use it to set the map back to its
+        // previous center and span
+        if let regionDictionary = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath) as? [String : AnyObject] {
+            
+            let longitude = regionDictionary["longitude"] as! CLLocationDegrees
+            let latitude = regionDictionary["latitude"] as! CLLocationDegrees
+            let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            
+            let longitudeDelta = regionDictionary["latitudeDelta"] as! CLLocationDegrees
+            let latitudeDelta = regionDictionary["longitudeDelta"] as! CLLocationDegrees
+            let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            
+            let savedRegion = MKCoordinateRegion(center: center, span: span)
+            
+            mapView.setRegion(savedRegion, animated: animated)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    func showAlertView(errorMessage: String?) {
+        
+        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .Alert)
+        
+        let cancelAction = UIAlertAction(title: "Dismiss", style: .Cancel) {(action) in
+            
+            
+        }
+        alertController.addAction(cancelAction)
+        
+        self.presentViewController(alertController, animated: true){
+            
         }
         
     }
