@@ -14,7 +14,7 @@ The project requires to persist a complex model using Core Data, plist persisten
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Ignacio Moreno
+Copyright (c) 2015 Ivan Kodrnja
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
