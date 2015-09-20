@@ -44,7 +44,8 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         var error: NSError?
         fetchedResultsController.performFetch(&error)
         if let error = error {
-            println("There was an error")
+            println("Error: \(error.localizedDescription)")
+            self.showAlertView("There was a problem with this pin. Please go back to the map and drop a new one.")
         }
 
         // check if there are available photos associted with the pin, and if no act accordingly
@@ -120,7 +121,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         }
     }
     
-    // MARK: collection view
+    // MARK: - Collection View
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
         
@@ -185,7 +186,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         updateBottomButton()
     }
     
-    // MARK: NSFetchedResultsControler delegate methods
+    // MARK: - NSFetchedResultsControler delegate methods
     
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
         // We are about to handle some new changes. Start out with empty arrays for each change type
@@ -254,6 +255,8 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         }
     }
     
+    // MARK: - Helpers
+    
     func newPhotoCollection(){
         bottomButton.enabled = false
         
@@ -287,8 +290,8 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                             })
                             
                         } else {
-                            // TODO: handle error
-                            println("error")
+                            // We won't alert the user
+                            println("Error: \(error?.localizedDescription)")
                             self.bottomButton.enabled = true
                         }
                     }
@@ -297,8 +300,9 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 }
                 
             } else {
-                // TODO: handle error
-                println("error")
+                // Error with Flicker connection
+                println("Error: \(error?.localizedDescription)")
+                self.showAlertView("There was a problem connecting to Flickr. Please delete the pin and put a new one on the map.")
             }
         }
         // save data
@@ -327,6 +331,23 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         } else {
             bottomButton.title = "New Collection"
         }
+    }
+    
+    
+    func showAlertView(errorMessage: String?) {
+        
+        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .Alert)
+        
+        let cancelAction = UIAlertAction(title: "Dismiss", style: .Cancel) {(action) in
+            
+            
+        }
+        alertController.addAction(cancelAction)
+        
+        self.presentViewController(alertController, animated: true){
+            
+        }
+        
     }
     
 }

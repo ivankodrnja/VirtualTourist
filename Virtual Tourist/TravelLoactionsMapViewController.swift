@@ -155,8 +155,8 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                                     })
                                     
                                 } else {
-                                    // TODO: handle error
-                                    println("error")
+                                    // We won't alert the user
+                                    println("Error: \(error?.localizedDescription)")
                                 }
                             }
                             
@@ -164,8 +164,9 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                         }
                         
                     } else {
-                        // TODO: handle error
-                        println("error")
+                        // Error with Flicker connection
+                        println("Error: \(error?.localizedDescription)")
+                        self.showAlertView("There was a problem connecting to Flickr. Please delete the pin and put a new one on the map.")
                     }
                 }
                 // save data
