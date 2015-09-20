@@ -51,7 +51,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // check if there are available photos associted with the pin, and if no act accordingly
         if fetchedResultsController.fetchedObjects?.count == 0 {
             self.noImagesLabel.hidden = false
-            bottomButton.enabled = false
+            bottomButton.enabled = true
         }
     }
     
@@ -300,9 +300,9 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 }
                 
             } else {
-                // Error with Flicker connection
+                // Error, e.g. the pin has no images or the internet connection is offline
                 println("Error: \(error?.localizedDescription)")
-                self.showAlertView("There was a problem connecting to Flickr. Please delete the pin and put a new one on the map.")
+                self.showAlertView(error?.localizedDescription)
             }
         }
         // save data

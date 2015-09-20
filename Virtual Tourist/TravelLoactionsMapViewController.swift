@@ -164,9 +164,9 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                         }
                         
                     } else {
-                        // Error with Flicker connection
+                        // Error, e.g. the pin has no images or the internet connection is offline
                         println("Error: \(error?.localizedDescription)")
-                        self.showAlertView("There was a problem connecting to Flickr. Please delete the pin and put a new one on the map.")
+                        self.showAlertView(error?.localizedDescription)
                     }
                 }
                 // save data
