@@ -115,7 +115,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // we use the Swift `find` function to see if the indexPath is in the array
         
         if let index = find(selectedIndexes, indexPath) {
-            cell.imageView.alpha = 0.05
+            cell.imageView.alpha = 0.5
         } else {
             cell.imageView.alpha = 1.0
         }
@@ -144,7 +144,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
             UIView.animateWithDuration(0.2,
                 animations: { cell.imageView.alpha = 1.0 })
         }
-        // modify the cell if the user has tapped it
+        // modify the cell
         self.configureCell(cell, atIndexPath: indexPath)
         
         return cell
