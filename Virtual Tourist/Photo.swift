@@ -20,9 +20,10 @@ class Photo : NSManagedObject {
     @NSManaged var imageFilename : String?
     @NSManaged var imageUrl : String
     @NSManaged var pin : Pin?
-    
+
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
+        
     }
     
     init(dictionary: [String : AnyObject], pin: Pin, context: NSManagedObjectContext) {
@@ -33,9 +34,12 @@ class Photo : NSManagedObject {
         // Dictionary
         self.imageUrl = dictionary[Keys.imageUrl] as! String
         
+        
         self.pin = pin
     }
-
+    
+    
+    
     
     var image: UIImage? {
         
@@ -50,7 +54,7 @@ class Photo : NSManagedObject {
         }
         return nil
     }
-    
+
     
     override func prepareForDeletion() {
         //Delete the associated image file when the Photo managed object is deleted.

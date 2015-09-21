@@ -131,7 +131,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                 })
             case .Changed:
                 droppedPin.willChangeValueForKey("coordinate")
-                droppedPin.coordinate = newCoord
+                droppedPin.safeCoordinate = newCoord
                 droppedPin.didChangeValueForKey("coordinate")
                 
             case .Ended:

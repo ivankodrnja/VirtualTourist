@@ -135,7 +135,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
         // if there is an image, update the cell appropriately
-        if photo.image != nil {
+        if photo.safeImage != nil {
             
             cell.activityView.stopAnimating()
             cell.imageView.alpha = 0.0
