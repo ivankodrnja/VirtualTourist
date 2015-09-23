@@ -34,12 +34,8 @@ class Photo : NSManagedObject {
         // Dictionary
         self.imageUrl = dictionary[Keys.imageUrl] as! String
         
-        
         self.pin = pin
     }
-    
-    
-    
     
     var image: UIImage? {
         

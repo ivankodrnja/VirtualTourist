@@ -106,7 +106,11 @@ class CoreDataStackManager {
         if coordinator == nil {
             return nil
         }
-        var managedObjectContext = NSManagedObjectContext()
+        // var managedObjectContext = NSManagedObjectContext()
+        // Ensure that the context is created in the main queue.
+        var managedObjectContext = NSManagedObjectContext(concurrencyType:NSManagedObjectContextConcurrencyType.MainQueueConcurrencyType)
+        
+        
         managedObjectContext.persistentStoreCoordinator = coordinator
         return managedObjectContext
         }()

@@ -140,29 +140,30 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                     if error == nil {
                         
                         // Parse the array of photos dictionaries
-                        var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
-                            
-                            let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.sharedContext)
-                            // set the relationship
-                            //photo.pin = self.droppedPin
-                            
-                            FlickrClient.sharedInstance().getPhotoForImageUrl(photo){(success, error) in
+                        dispatch_async(dispatch_get_main_queue()){
+                            var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                                 
-                                if error == nil {
+                                let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.sharedContext)
+                                // set the relationship
+                                //photo.pin = self.droppedPin
+                                
+                                FlickrClient.sharedInstance().getPhotoForImageUrl(photo){(success, error) in
                                     
-                                    dispatch_async(dispatch_get_main_queue(), {
-                                        CoreDataStackManager.sharedInstance().saveContext()
-                                    })
-                                    
-                                } else {
-                                    // We won't alert the user
-                                    println("Error: \(error?.localizedDescription)")
+                                    if error == nil {
+                                        
+                                        dispatch_async(dispatch_get_main_queue(), {
+                                            CoreDataStackManager.sharedInstance().saveContext()
+                                        })
+                                        
+                                    } else {
+                                        // We won't alert the user
+                                        println("Error: \(error?.localizedDescription)")
+                                    }
                                 }
+                                
+                                return photo
                             }
-                            
-                            return photo
                         }
-                        
                     } else {
                         // Error, e.g. the pin has no images or the internet connection is offline
                         println("Error: \(error?.localizedDescription)")
@@ -170,8 +171,9 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                     }
                 }
                 // save data
-                CoreDataStackManager.sharedInstance().saveContext()
-                
+                dispatch_async(dispatch_get_main_queue()){
+                    CoreDataStackManager.sharedInstance().saveContext()
+                }
             default:
                 return
                 
@@ -227,8 +229,9 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                 
                 // remove from context
                 sharedContext.deleteObject(pinToDelete)
-                CoreDataStackManager.sharedInstance().saveContext()
-
+                dispatch_async(dispatch_get_main_queue()){
+                    CoreDataStackManager.sharedInstance().saveContext()
+                }
             }
         } else {
             

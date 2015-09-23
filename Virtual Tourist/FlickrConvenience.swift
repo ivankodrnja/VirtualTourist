@@ -107,8 +107,9 @@ extension FlickrClient {
                     NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: result, attributes: nil)
                     
                     // Update the Photo managed object with the file path.
-                    photo.imageFilename = fileURL.path
-                    
+                    dispatch_async(dispatch_get_main_queue()){
+                        photo.imageFilename = fileURL.path
+                    }
                     completionHandler(success: true, error: nil)
                 }
 
