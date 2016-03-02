@@ -1,14 +1,23 @@
 ﻿## Virtual Tourist
 
-Combining networking and Core Data, Virtual tourist is the 4th project towards Udacity's iOS Nanodegree. 
+Combining networking and Core Data, Virtual tourist is the 4th project towards Udacity's iOS Nanodegree https://www.udacity.com/
+
 
 ## Overview
 
 The Virtual Tourist app downloads and stores images from Flickr. The app allows users to drop pins on a map, as if they were stops on a tour. Users will then be able to download pictures for the location and persist both the pictures, and the association of the pictures with the pin.
 
+
 ## Motivation
 
 The project requires to persist a complex model using Core Data, plist persistence of an array of dictionaries and persisting data locally on a device. Storing media and retrieving it later is an essential skill for any iOS developer.
+
+
+## What have I learned
+I learned how to:
+* Use NSURLSessions to interact with a public restful API
+* Create a user interface that intuitively communicates network activity and download progress
+* Store media on the device file system Use Core Data for local persistence of an object structure
 
 ## License
 
@@ -33,5 +42,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-
