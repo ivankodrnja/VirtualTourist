@@ -42,7 +42,7 @@ class Photo : NSManagedObject {
         if let imageFilename = imageFilename {
             
             let fileName = imageFilename.lastPathComponent
-            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
             let pathArray = [dirPath, fileName]
             let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
             
@@ -56,11 +56,14 @@ class Photo : NSManagedObject {
         //Delete the associated image file when the Photo managed object is deleted.
         if let fileName = imageFilename?.lastPathComponent {
             
-            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
             let pathArray = [dirPath, fileName]
             let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
             
-            NSFileManager.defaultManager().removeItemAtURL(fileURL, error: nil)
+            do {
+                try NSFileManager.defaultManager().removeItemAtURL(fileURL)
+            } catch _ {
+            }
         }
     }
     

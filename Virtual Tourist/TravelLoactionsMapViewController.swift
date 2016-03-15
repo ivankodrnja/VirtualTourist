@@ -30,13 +30,16 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         restoreMapRegion(false)
         
         // long press gesture recognizer instance
-        var longPressGR = UILongPressGestureRecognizer(target: self, action: "longTap:")
+        let longPressGR = UILongPressGestureRecognizer(target: self, action: "longTap:")
         mapView.addGestureRecognizer(longPressGR)
         
         // this class is MKMapViewDelegate
         self.mapView.delegate = self
         
-        fetchedResultsController.performFetch(nil)
+        do {
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         // this class is NSFetchedResultsControllerDelegate
         fetchedResultsController.delegate = self
         
@@ -114,8 +117,8 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         if !self.editMode{
             
             // coordinates of a point the user touched on the map
-            var touchPoint = gestureRecognizer.locationInView(self.mapView)
-            var newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+            let touchPoint = gestureRecognizer.locationInView(self.mapView)
+            let newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
             
             switch gestureRecognizer.state {
             case .Began:
@@ -141,7 +144,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                         
                         // Parse the array of photos dictionaries
                         dispatch_async(dispatch_get_main_queue()){
-                            var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
+                            _ = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                                 
                                 let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.sharedContext)
                                 // set the relationship
@@ -157,7 +160,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                                         
                                     } else {
                                         // We won't alert the user
-                                        println("Error: \(error?.localizedDescription)")
+                                        print("Error: \(error?.localizedDescription)")
                                     }
                                 }
                                 
@@ -166,7 +169,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                         }
                     } else {
                         // Error, e.g. the pin has no images or the internet connection is offline
-                        println("Error: \(error?.localizedDescription)")
+                        print("Error: \(error?.localizedDescription)")
                         self.showAlertView(error?.localizedDescription)
                     }
                 }
@@ -198,11 +201,11 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - Map delegate methods
     
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         saveMapRegion()
     }
     
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseId = "pin"
         
         var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
@@ -210,7 +213,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.animatesDrop = true
-            pinView!.pinColor = .Red
+            pinView!.pinTintColor = red
         } else {
             pinView!.annotation = annotation
         }
@@ -218,14 +221,14 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         return pinView
     }
     
-    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         // annotation (pin) selection is enabled only in edit mode
         if self.editMode {
             if let pinAnnotation = view  {
                
                 // to delete the pin, first creat an object to delete
                 let pinToDelete = pinAnnotation.annotation as! Pin
-                println("pinToDelete:\(pinToDelete)")
+                print("pinToDelete:\(pinToDelete)")
                 
                 // remove from context
                 sharedContext.deleteObject(pinToDelete)
@@ -246,7 +249,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - NSFetchedResultsController delegate methods
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         let pin = anObject as! Pin
         
         switch (type){
@@ -267,7 +270,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     // A convenient property
     var filePath : String {
         let manager = NSFileManager.defaultManager()
-        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
+        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first! as NSURL
         return url.URLByAppendingPathComponent("mapRegionArchive").path!
     }
     

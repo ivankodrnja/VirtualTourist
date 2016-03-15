@@ -32,12 +32,12 @@ extension FlickrClient {
                 completionHandler(result: nil, error: error)
             } else {
                 /* 5. Parse the data */
-                var parsingError: NSError? = nil
-                let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
+                let parsingError: NSError? = nil
+                let parsedResult = (try! NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as! NSDictionary
                 
                 /* 6. Use the data! */
                 if let error = parsingError {
-                    println("Parsing Error: \(error)")
+                    print("Parsing Error: \(error)")
                 } else {
                     if let photosDictionary = parsedResult.valueForKey(FlickrClient.JSONResponseKeys.photos) as? [String:AnyObject] {
                         
@@ -53,7 +53,7 @@ extension FlickrClient {
                                 completionHandler(result: photosArray, error: nil)
                             
                             } else {
-                                println("Cant find key 'photo' in \(photosDictionary)")
+                                print("Cant find key 'photo' in \(photosDictionary)")
                             }
                             
                         } else {
@@ -98,8 +98,8 @@ extension FlickrClient {
                 
                     /* 6. Use the data! */
                     //  Make a fileURL for it
-                    let fileName = urlString.lastPathComponent 
-                    let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+                    let fileName = urlString.lastPathComponent
+                    let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
                     let pathArray = [dirPath, fileName]
                     let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
                     

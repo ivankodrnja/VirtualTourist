@@ -42,9 +42,13 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // this class is NSFetchedResultsControllerDelegate
         fetchedResultsController.delegate = self
         var error: NSError?
-        fetchedResultsController.performFetch(&error)
+        do {
+            try fetchedResultsController.performFetch()
+        } catch let error1 as NSError {
+            error = error1
+        }
         if let error = error {
-            println("Error: \(error.localizedDescription)")
+            print("Error: \(error.localizedDescription)")
             self.showAlertView("There was a problem with this pin. Please go back to the map and drop a new one.")
         }
 
@@ -114,7 +118,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // If the cell is "selected" it's color panel is grayed out
         // we use the Swift `find` function to see if the indexPath is in the array
         
-        if let index = find(selectedIndexes, indexPath) {
+        if let _ = selectedIndexes.indexOf(indexPath) {
             cell.imageView.alpha = 0.5
         } else {
             cell.imageView.alpha = 1.0
@@ -123,7 +127,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     // MARK: - Collection View
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        let sectionInfo = self.fetchedResultsController.sections![section] 
         
         return sectionInfo.numberOfObjects
     }
@@ -179,7 +183,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
 
         
         // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
-        if let index = find(selectedIndexes, indexPath) {
+        if let index = selectedIndexes.indexOf(indexPath) {
             selectedIndexes.removeAtIndex(index)
         } else {
             selectedIndexes.append(indexPath)
@@ -201,7 +205,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         updatedIndexPaths = [NSIndexPath]()
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
         switch type{
             
@@ -285,7 +289,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 
                 // Parse the array of photos dictionaries
                 dispatch_async(dispatch_get_main_queue()){
-                    var photos = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
+                    _ = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                         
                         let photo = Photo(dictionary: dictionary, pin: self.selectedPin, context: self.sharedContext)
                         // set the relationship
@@ -301,7 +305,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                                 
                             } else {
                                 // We won't alert the user
-                                println("Error: \(error?.localizedDescription)")
+                                print("Error: \(error?.localizedDescription)")
                                 self.bottomButton.enabled = true
                             }
                         }
@@ -311,7 +315,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 }
             } else {
                 // Error, e.g. the pin has no images or the internet connection is offline
-                println("Error: \(error?.localizedDescription)")
+                print("Error: \(error?.localizedDescription)")
                 self.showAlertView(error?.localizedDescription)
             }
         }

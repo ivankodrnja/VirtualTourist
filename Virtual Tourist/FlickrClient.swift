@@ -39,7 +39,7 @@ class FlickrClient: NSObject {
             
         }
         
-        return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
     }
     
     // MARK: - Shared Instance
