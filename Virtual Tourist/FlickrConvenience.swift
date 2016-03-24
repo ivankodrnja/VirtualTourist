@@ -25,49 +25,71 @@ extension FlickrClient {
         let request = NSMutableURLRequest(URL: url)
         
         /* 4. Make the request */
-        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+        let task = session.dataTaskWithRequest(request) { data, response, error in
             
-            if let error = downloadError {
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
                 
                 completionHandler(result: nil, error: error)
-            } else {
-                /* 5. Parse the data */
-                let parsingError: NSError? = nil
-                let parsedResult = (try! NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as! NSDictionary
-                
-                /* 6. Use the data! */
-                if let error = parsingError {
-                    print("Parsing Error: \(error)")
-                } else {
-                    if let photosDictionary = parsedResult.valueForKey(FlickrClient.JSONResponseKeys.photos) as? [String:AnyObject] {
-                        
-                        // check how many photos are there
-                        var totalPhotosVal = 0
-                        if let totalPhotos = photosDictionary[FlickrClient.JSONResponseKeys.total] as? String {
-                            totalPhotosVal = (totalPhotos as NSString).integerValue
-                        }
-                        
-                        if totalPhotosVal > 0 {
-                            if let photosArray = photosDictionary[FlickrClient.JSONResponseKeys.photo] as? [[String: AnyObject]] {
-                                
-                                completionHandler(result: photosArray, error: nil)
-                            
-                            } else {
-                                print("Cant find key 'photo' in \(photosDictionary)")
-                            }
-                            
-                        } else {
-                            
-                            completionHandler(result: nil, error: NSError(domain: "Results from Flick", code: 0, userInfo: [NSLocalizedDescriptionKey: "This pin has no images."]))
-                            
-                        }
-                        
-                        
-                    } else {
-                        completionHandler(result: nil, error: NSError(domain: "Results from Flick", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download (server) error occured. Please retry."]))
-                    }
-                }
+                print("There was an error with your request: \(error)")
+                return
             }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? NSHTTPURLResponse)?.statusCode where statusCode >= 200 && statusCode <= 299 else {
+                if let response = response as? NSHTTPURLResponse {
+                    print("Your request returned an invalid response! Status code: \(response.statusCode)!")
+                } else if let response = response {
+                    print("Your request returned an invalid response! Response: \(response)!")
+                } else {
+                    print("Your request returned an invalid response!")
+                }
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard let data = data else {
+                print("No data was returned by the request!")
+                return
+            }
+
+            /* 5. Parse the data */
+            let parsedResult: AnyObject!
+            do {
+                parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments) as! NSDictionary
+            } catch {
+                parsedResult = nil
+                print("Could not parse the data as JSON: '\(data)'")
+                return
+            }
+            
+            /* 6. Use the data! */
+            if let photosDictionary = parsedResult.valueForKey(FlickrClient.JSONResponseKeys.photos) as? [String:AnyObject] {
+                
+                // check how many photos are there
+                var totalPhotosVal = 0
+                if let totalPhotos = photosDictionary[FlickrClient.JSONResponseKeys.total] as? String {
+                    totalPhotosVal = (totalPhotos as NSString).integerValue
+                }
+                
+                if totalPhotosVal > 0 {
+                    if let photosArray = photosDictionary[FlickrClient.JSONResponseKeys.photo] as? [[String: AnyObject]] {
+                        
+                        completionHandler(result: photosArray, error: nil)
+                    
+                    } else {
+                        print("Cant find key 'photo' in \(photosDictionary)")
+                    }
+                    
+                } else {
+                    
+                    completionHandler(result: nil, error: NSError(domain: "Results from Flickr", code: 0, userInfo: [NSLocalizedDescriptionKey: "This pin has no images."]))
+                }
+                
+            } else {
+                completionHandler(result: nil, error: NSError(domain: "Results from Flickr", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download (server) error occured. Please retry."]))
+            }
+            
         }
         /* 7. Start the request */
         task.resume()
@@ -75,9 +97,8 @@ extension FlickrClient {
     
     
     func getPhotoForImageUrl(photo : Photo,completionHandler: (success: Bool, error: NSError?) -> Void) {
-        
         /* 1. Set the parameters */
-        // there ar eno parameters
+        // there are no parameters
         
         /* 2. Build the URL */
         let urlString = photo.imageUrl
@@ -87,33 +108,55 @@ extension FlickrClient {
         let request = NSMutableURLRequest(URL: url)
         
         /* 4. Make the request */
-        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+        let task = session.dataTaskWithRequest(request) { data, response, error in
+        
+        /* GUARD: Was there an error? */
+        guard (error == nil) else {
             
-            if let error = downloadError {
-                
-                completionHandler(success: false, error: error)
+            completionHandler(success: false, error: error)
+            print("There was an error with your request: \(error)")
+            return
+        }
+        
+        /* GUARD: Did we get a successful 2XX response? */
+        guard let statusCode = (response as? NSHTTPURLResponse)?.statusCode where statusCode >= 200 && statusCode <= 299 else {
+            if let response = response as? NSHTTPURLResponse {
+                print("Your request returned an invalid response! Status code: \(response.statusCode)!")
+            } else if let response = response {
+                print("Your request returned an invalid response! Response: \(response)!")
             } else {
-                /* 5. Parse the data */
-                if let result = data {
-                
-                    /* 6. Use the data! */
-                    //  Make a fileURL for it
-                    let fileName = urlString.lastPathComponent
-                    let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
-                    let pathArray = [dirPath, fileName]
-                    let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
-                    
-                    // Save it
-                    NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: result, attributes: nil)
-                    
-                    // Update the Photo managed object with the file path.
-                    dispatch_async(dispatch_get_main_queue()){
-                        photo.imageFilename = fileURL.path
-                    }
-                    completionHandler(success: true, error: nil)
-                }
-
+                print("Your request returned an invalid response!")
             }
+            return
+        }
+        
+        /* GUARD: Was there any data returned? */
+        guard let data = data else {
+            print("No data was returned by the request!")
+            return
+        }
+            
+        /* 5. Parse the data */
+        if let result = data {
+        
+            /* 6. Use the data! */
+            //  Make a fileURL for it
+            let fileName = urlString.lastPathComponent
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+            let pathArray = [dirPath, fileName]
+            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            
+            // Save it
+            NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: result, attributes: nil)
+            
+            // Update the Photo managed object with the file path.
+            dispatch_async(dispatch_get_main_queue()){
+                photo.imageFilename = fileURL.path
+            }
+            completionHandler(success: true, error: nil)
+        }
+
+            
         }
         /* 7. Start the request */
         task.resume()
