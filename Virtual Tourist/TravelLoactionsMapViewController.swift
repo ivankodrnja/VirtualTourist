@@ -77,7 +77,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
     var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance().managedObjectContext!
+        return CoreDataStackManager.sharedInstance().managedObjectContext
     }
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -213,7 +213,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.animatesDrop = true
-            pinView!.pinTintColor = red
+            pinView!.pinTintColor = UIColor.redColor()
         } else {
             pinView!.annotation = annotation
         }
@@ -224,18 +224,18 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         // annotation (pin) selection is enabled only in edit mode
         if self.editMode {
-            if let pinAnnotation = view  {
+ 
                
-                // to delete the pin, first creat an object to delete
-                let pinToDelete = pinAnnotation.annotation as! Pin
-                print("pinToDelete:\(pinToDelete)")
-                
-                // remove from context
-                sharedContext.deleteObject(pinToDelete)
-                dispatch_async(dispatch_get_main_queue()){
-                    CoreDataStackManager.sharedInstance().saveContext()
-                }
+            // to delete the pin, first creat an object to delete
+            let pinToDelete = view.annotation as! Pin
+            print("pinToDelete:\(pinToDelete)")
+            
+            // remove from context
+            sharedContext.deleteObject(pinToDelete)
+            dispatch_async(dispatch_get_main_queue()){
+            CoreDataStackManager.sharedInstance().saveContext()
             }
+            
         } else {
             
             let touchedPin = view.annotation as! Pin
@@ -249,7 +249,10 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - NSFetchedResultsController delegate methods
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    
+
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         let pin = anObject as! Pin
         
         switch (type){

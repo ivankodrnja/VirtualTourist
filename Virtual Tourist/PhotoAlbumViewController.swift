@@ -81,7 +81,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
     var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance().managedObjectContext!
+        return CoreDataStackManager.sharedInstance().managedObjectContext
     }
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -205,7 +205,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         updatedIndexPaths = [NSIndexPath]()
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
         switch type{
             

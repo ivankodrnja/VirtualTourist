@@ -129,32 +129,29 @@ extension FlickrClient {
             }
             return
         }
-        
+        /* 5. Parse the data */
         /* GUARD: Was there any data returned? */
         guard let data = data else {
             print("No data was returned by the request!")
             return
         }
             
-        /* 5. Parse the data */
-        if let result = data {
+       /* 6. Use the data! */
+       //  Make a fileURL for it
+        let fileName = NSURL.fileURLWithPath(urlString).lastPathComponent!
+        let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+        let pathArray = [dirPath, fileName]
+        let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
         
-            /* 6. Use the data! */
-            //  Make a fileURL for it
-            let fileName = urlString.lastPathComponent
-            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
-            let pathArray = [dirPath, fileName]
-            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
-            
-            // Save it
-            NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: result, attributes: nil)
-            
-            // Update the Photo managed object with the file path.
-            dispatch_async(dispatch_get_main_queue()){
-                photo.imageFilename = fileURL.path
-            }
-            completionHandler(success: true, error: nil)
+        // Save it
+        NSFileManager.defaultManager().createFileAtPath(fileURL.path!, contents: data, attributes: nil)
+        
+        // Update the Photo managed object with the file path.
+        dispatch_async(dispatch_get_main_queue()){
+            photo.imageFilename = fileURL.path
         }
+        completionHandler(success: true, error: nil)
+        
 
             
         }
