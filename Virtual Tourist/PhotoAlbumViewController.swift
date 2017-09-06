@@ -9,6 +9,30 @@
 import UIKit
 import MapKit
 import CoreData
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDelegate, UICollectionViewDataSource, UICollectionViewDelegate {
 
@@ -20,12 +44,38 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     var selectedPin : Pin!
     var page : Int = 1
     
+    var stack: CoreDataStack!
+    
+    // MARK: Properties
+    
+    var fetchedResultsController : NSFetchedResultsController<NSFetchRequestResult>? {
+        didSet {
+            // Whenever the frc changes, we execute the search
+            fetchedResultsController?.delegate = self
+            executeSearch()
+        }
+    }
+    
+    // MARK: Initializers
+    /*
+    init(fetchedResultsController fc : NSFetchedResultsController<NSFetchRequestResult>) {
+        fetchedResultsController = fc
+        
+    }
+    */
+    // Do not worry about this initializer. I has to be implemented
+    // because of the way Swift interfaces with an Objective C
+    // protocol called NSArchiving. It's not relevant.
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
     // The selected indexes array keeps all of the indexPaths for cells that are "selected"
-    var selectedIndexes = [NSIndexPath]()
+    var selectedIndexes = [IndexPath]()
     // Keep the changes. We will keep track of insertions, deletions, and updates.
-    var insertedIndexPaths: [NSIndexPath]!
-    var deletedIndexPaths: [NSIndexPath]!
-    var updatedIndexPaths: [NSIndexPath]!
+    var insertedIndexPaths: [IndexPath]!
+    var deletedIndexPaths: [IndexPath]!
+    var updatedIndexPaths: [IndexPath]!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,11 +85,26 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         setMapRegion(true)
         
         self.mapView.addAnnotation(selectedPin)
-        self.mapView.zoomEnabled = false
-        self.mapView.scrollEnabled = false
-        self.mapView.userInteractionEnabled = false
+        self.mapView.isZoomEnabled = false
+        self.mapView.isScrollEnabled = false
+        self.mapView.isUserInteractionEnabled = false
+        
+        
+        // Get the stack
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        stack = delegate.stack
+        
+        // Create a fetchrequest
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Photo")
+        fr.sortDescriptors = []
+        fr.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
+        
+        // Create the FetchedResultsController
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
+        
         
         // this class is NSFetchedResultsControllerDelegate
+        /*
         fetchedResultsController.delegate = self
         var error: NSError?
         do {
@@ -51,15 +116,15 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
             print("Error: \(error.localizedDescription)")
             self.showAlertView("There was a problem with this pin. Please go back to the map and drop a new one.")
         }
-
+         */
         // check if there are available photos associted with the pin, and if no act accordingly
-        if fetchedResultsController.fetchedObjects?.count == 0 {
-            self.noImagesLabel.hidden = false
-            bottomButton.enabled = true
+        if fetchedResultsController?.fetchedObjects?.count == 0 {
+            self.noImagesLabel.isHidden = false
+            bottomButton.isEnabled = true
         }
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         self.navigationItem.leftBarButtonItem?.title = "OK"
     }
     
@@ -80,13 +145,11 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
-    var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance().managedObjectContext
-    }
-    
+
+    /*
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Photo")
         fetchRequest.sortDescriptors = []
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
         
@@ -98,11 +161,11 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         return fetchedResultsController
         
         }()
-    
+    */
     
     // MARK: - Map
     
-    func setMapRegion(animated: Bool) {
+    func setMapRegion(_ animated: Bool) {
 
         let span = MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
         
@@ -113,12 +176,12 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     // MARK: - Configure Cell
     
-    func configureCell(cell: PhotoCell, atIndexPath indexPath: NSIndexPath) {
+    func configureCell(_ cell: PhotoCell, atIndexPath indexPath: IndexPath) {
         
         // If the cell is "selected" it's color panel is grayed out
         // we use the Swift `find` function to see if the indexPath is in the array
         
-        if let _ = selectedIndexes.indexOf(indexPath) {
+        if let _ = selectedIndexes.index(of: indexPath) {
             cell.imageView.alpha = 0.5
         } else {
             cell.imageView.alpha = 1.0
@@ -126,17 +189,17 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     }
     
     // MARK: - Collection View
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] 
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        let sectionInfo = self.fetchedResultsController?.sections![section] 
         
-        return sectionInfo.numberOfObjects
+        return sectionInfo!.numberOfObjects
     }
     
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCell
         
-        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        let photo = fetchedResultsController?.object(at: indexPath) as! Photo
         
         // reset pevious images in the xell
         cell.imageView.image = nil
@@ -151,7 +214,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
             cell.imageView.alpha = 0.0
             cell.imageView.image = photo.image
             
-            UIView.animateWithDuration(0.2,
+            UIView.animate(withDuration: 0.2,
                 animations: { cell.imageView.alpha = 1.0 })
         }
         // modify the cell
@@ -160,16 +223,16 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         return cell
     }
     
-    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return self.fetchedResultsController.sections?.count ?? 0
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return self.fetchedResultsController!.sections?.count ?? 0
     }
     
-    func collectionView(collectionView: UICollectionView, shouldSelectItemAtIndexPath indexPath: NSIndexPath) -> Bool {
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         
-        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
+        let cell = collectionView.cellForItem(at: indexPath) as! PhotoCell
         
         //Disallow selection if the cell is waiting for its image to appear.
-        if cell.activityView.isAnimating() {
+        if cell.activityView.isAnimating {
             
             return false
         }
@@ -177,14 +240,14 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         return true
     }
     
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
+        let cell = collectionView.cellForItem(at: indexPath) as! PhotoCell
 
         
         // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
-        if let index = selectedIndexes.indexOf(indexPath) {
-            selectedIndexes.removeAtIndex(index)
+        if let index = selectedIndexes.index(of: indexPath) {
+            selectedIndexes.remove(at: index)
         } else {
             selectedIndexes.append(indexPath)
         }
@@ -198,24 +261,24 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     
     // MARK: - NSFetchedResultsControler delegate methods
     
-    func controllerWillChangeContent(controller: NSFetchedResultsController) {
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         // We are about to handle some new changes. Start out with empty arrays for each change type
-        insertedIndexPaths = [NSIndexPath]()
-        deletedIndexPaths = [NSIndexPath]()
-        updatedIndexPaths = [NSIndexPath]()
+        insertedIndexPaths = [IndexPath]()
+        deletedIndexPaths = [IndexPath]()
+        updatedIndexPaths = [IndexPath]()
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
         switch type{
             
-        case .Insert:
+        case .insert:
             insertedIndexPaths.append(newIndexPath!)
             break
-        case .Delete:
+        case .delete:
             deletedIndexPaths.append(indexPath!)
             break
-        case .Update:
+        case .update:
             updatedIndexPaths.append(indexPath!)
             break
 
@@ -224,27 +287,27 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         }
     }
     
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         
         //Check to make sure UI elements are correctly displayed.
         if controller.fetchedObjects?.count > 0 {
             
-            noImagesLabel.hidden = true
-            bottomButton.enabled = true
+            noImagesLabel.isHidden = true
+            bottomButton.isEnabled = true
         }
         //Make the relevant updates to the collectionView once Core Data has finished its changes.
         collectionView.performBatchUpdates({() -> Void in
             
             for indexPath in self.insertedIndexPaths {
-                self.collectionView.insertItemsAtIndexPaths([indexPath])
+                self.collectionView.insertItems(at: [indexPath])
             }
             
             for indexPath in self.deletedIndexPaths {
-                self.collectionView.deleteItemsAtIndexPaths([indexPath])
+                self.collectionView.deleteItems(at: [indexPath])
             }
             
             for indexPath in self.updatedIndexPaths {
-                self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                self.collectionView.reloadItems(at: [indexPath])
             }
             
             }, completion: nil)
@@ -261,8 +324,14 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
             
             updateBottomButton()
             // save on the main thread (part of getting Core Data thread safe)
-            dispatch_async(dispatch_get_main_queue()){
-                CoreDataStackManager.sharedInstance().saveContext()
+            DispatchQueue.main.async{
+                /*
+                do {
+                    try self.stack.saveContext()
+                } catch {
+                    print("Error: \(String(describing: error.localizedDescription))")
+                }
+                 */
             }
         }
     }
@@ -270,17 +339,23 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     // MARK: - Helpers
     
     func newPhotoCollection(){
-        bottomButton.enabled = false
+        bottomButton.isEnabled = false
         
         page += 1
         
         // delete existing photos
-        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
-            sharedContext.deleteObject(photo)
+        for photo in fetchedResultsController?.fetchedObjects as! [Photo] {
+            stack.context.delete(photo)
         }
         // save on the main thread (part of getting Core Data thread safe)
-        dispatch_async(dispatch_get_main_queue()){
-            CoreDataStackManager.sharedInstance().saveContext()
+        DispatchQueue.main.async{
+            /*
+            do {
+                try self.stack.saveContext()
+            } catch {
+                print("Error: \(String(describing: error.localizedDescription))")
+            }
+             */
         }
         
         FlickrClient.sharedInstance().getPhotos(selectedPin, pageNumber: page){(result, error) in
@@ -288,25 +363,31 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
             if error == nil {
                 
                 // Parse the array of photos dictionaries
-                dispatch_async(dispatch_get_main_queue()){
+                DispatchQueue.main.async{
                     _ = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                         
-                        let photo = Photo(dictionary: dictionary, pin: self.selectedPin, context: self.sharedContext)
+                        let photo = Photo(dictionary: dictionary, pin: self.selectedPin, context: self.stack.context)
                         // set the relationship
                         //photo.pin = self.selectedPin
                         FlickrClient.sharedInstance().getPhotoForImageUrl(photo){(success, error) in
                             
                             if error == nil {
                                 
-                                dispatch_async(dispatch_get_main_queue(), {
-                                    CoreDataStackManager.sharedInstance().saveContext()
-                                    self.bottomButton.enabled = true
+                                DispatchQueue.main.async(execute: {
+                                    /*
+                                    do {
+                                        try self.stack.saveContext()
+                                    } catch {
+                                        print("Error: \(String(describing: error.localizedDescription))")
+                                    }
+                                    */
+                                    self.bottomButton.isEnabled = true
                                 })
                                 
                             } else {
                                 // We won't alert the user
-                                print("Error: \(error?.localizedDescription)")
-                                self.bottomButton.enabled = true
+                                print("Error: \(String(describing: error?.localizedDescription))")
+                                self.bottomButton.isEnabled = true
                             }
                         }
                         
@@ -315,26 +396,33 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
                 }
             } else {
                 // Error, e.g. the pin has no images or the internet connection is offline
-                print("Error: \(error?.localizedDescription)")
+                print("Error: \(String(describing: error?.localizedDescription))")
                 self.showAlertView(error?.localizedDescription)
             }
         }
         // save data
-        dispatch_async(dispatch_get_main_queue()){
-            CoreDataStackManager.sharedInstance().saveContext()
+        DispatchQueue.main.async{
+            /*
+            do {
+                try self.stack.saveContext()
+            } catch {
+                print("Error: \(String(describing: error.localizedDescription))")
+            }
+            */
         }
         
     }
+    
     
     func deleteSelectedPhotos() {
         var photosToDelete = [Photo]()
         
         for indexPath in selectedIndexes {
-            photosToDelete.append(fetchedResultsController.objectAtIndexPath(indexPath) as! Photo)
+            photosToDelete.append(fetchedResultsController?.object(at: indexPath) as! Photo)
         }
         
         for photo in photosToDelete {
-            sharedContext.deleteObject(photo)
+            stack.context.delete(photo)
         }
         // remove the deleted image indexes
         selectedIndexes = []
@@ -349,20 +437,31 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
     }
     
     
-    func showAlertView(errorMessage: String?) {
+    func showAlertView(_ errorMessage: String?) {
         
-        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .Alert)
+        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .alert)
         
-        let cancelAction = UIAlertAction(title: "Dismiss", style: .Cancel) {(action) in
+        let cancelAction = UIAlertAction(title: "Dismiss", style: .cancel) {(action) in
             
             
         }
         alertController.addAction(cancelAction)
         
-        self.presentViewController(alertController, animated: true){
+        self.present(alertController, animated: true){
             
         }
         
+    }
+    
+    // MARK: - CoreData Fetches
+    func executeSearch() {
+        if let fc = fetchedResultsController {
+            do {
+                try fc.performFetch()
+            } catch let e as NSError {
+                print("Error while trying to perform a search: \n\(e)\n\(String(describing: fetchedResultsController))")
+            }
+        }
     }
     
 }

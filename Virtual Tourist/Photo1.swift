@@ -5,7 +5,7 @@
 //  Created by Ivan Kodrnja on 12/09/15.
 //  Copyright (c) 2015 Ivan Kodrnja. All rights reserved.
 //
-
+/*
 import UIKit
 import CoreData
 
@@ -21,15 +21,15 @@ class Photo : NSManagedObject {
     @NSManaged var imageUrl : String
     @NSManaged var pin : Pin?
 
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
         
     }
     
     init(dictionary: [String : AnyObject], pin: Pin, context: NSManagedObjectContext) {
         // Core Data
-        let entity = NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)
-        super.init(entity: entity!, insertIntoManagedObjectContext: context)
+        let entity = NSEntityDescription.entity(forEntityName: "Photo", in: context)
+        super.init(entity: entity!, insertInto: context)
         
         // Dictionary
         self.imageUrl = dictionary[Keys.imageUrl] as! String
@@ -41,13 +41,13 @@ class Photo : NSManagedObject {
         
         if let imageFilename = imageFilename {
             
-            let filePathURL = NSURL.fileURLWithPath(imageFilename)
-            let lastPathComponent = filePathURL.lastPathComponent!
-            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+            let filePathURL = URL(fileURLWithPath: imageFilename)
+            let lastPathComponent = filePathURL.lastPathComponent
+            let dirPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             let pathArray = [dirPath, lastPathComponent]
-            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            let fileURL = NSURL.fileURL(withPathComponents: pathArray)!
             
-            return UIImage(contentsOfFile: fileURL.path!)
+            return UIImage(contentsOfFile: fileURL.path)
         }
         return nil
     }
@@ -55,18 +55,21 @@ class Photo : NSManagedObject {
     
     override func prepareForDeletion() {
         //Delete the associated image file when the Photo managed object is deleted.
-        if let imageFilePath = imageFilename, fileName = NSURL.fileURLWithPath(imageFilePath).lastPathComponent {
+        if let imageFilePath = imageFilename {
+            
+           let fileName = URL(fileURLWithPath: imageFilePath).lastPathComponent
             
             
-            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+            let dirPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             let pathArray = [dirPath, fileName]
-            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            let fileURL = NSURL.fileURL(withPathComponents: pathArray)!
             
             do {
-                try NSFileManager.defaultManager().removeItemAtURL(fileURL)
+                try FileManager.default.removeItem(at: fileURL)
             } catch _ {
             }
         }
     }
     
 }
+*/

@@ -5,7 +5,7 @@
 //  Created by Ivan Kodrnja on 12/09/15.
 //  Copyright (c) 2015 Ivan Kodrnja. All rights reserved.
 //
-
+/*
 import UIKit
 import CoreData
 import MapKit
@@ -30,16 +30,16 @@ class Pin : NSManagedObject, MKAnnotation {
         return safeCoordinate!
     }
     
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
         
         safeCoordinate = CLLocationCoordinate2DMake(latitude, longitude)
     }
     
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
         // Core Data
-        let entity = NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)
-        super.init(entity: entity!, insertIntoManagedObjectContext: context)
+        let entity = NSEntityDescription.entity(forEntityName: "Pin", in: context)
+        super.init(entity: entity!, insertInto: context)
         
         
         // Dictionary
@@ -66,3 +66,4 @@ class Pin : NSManagedObject, MKAnnotation {
     }
 */
 }
+*/

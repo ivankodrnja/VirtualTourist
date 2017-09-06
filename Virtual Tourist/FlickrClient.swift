@@ -10,19 +10,19 @@ import Foundation
 
 class FlickrClient: NSObject {
     
-    typealias CompletionHander = (result: AnyObject!, error: NSError?) -> Void
+    typealias CompletionHander = (_ result: AnyObject?, _ error: NSError?) -> Void
     
     /* Shared Session */
-    var session: NSURLSession
+    var session: URLSession
     
     override init() {
-        session = NSURLSession.sharedSession()
+        session = URLSession.shared
         super.init()
     }
     
     
     /* Helper function: Given a dictionary of parameters, convert to a string for a url */
-    class func escapedParameters(parameters: [String : AnyObject]) -> String {
+    class func escapedParameters(_ parameters: [String : AnyObject]) -> String {
         
         var urlVars = [String]()
         
@@ -32,14 +32,14 @@ class FlickrClient: NSObject {
             let stringValue = "\(value)"
             
             /* Escape it */
-            let escapedValue = stringValue.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet())
+            let escapedValue = stringValue.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)
             
             /* Append it */
             urlVars += [key + "=" + "\(escapedValue!)"]
             
         }
         
-        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joined(separator: "&")
     }
     
     // MARK: - Shared Instance

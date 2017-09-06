@@ -20,28 +20,59 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     // will serve to detect the exct pin that was selected when transitioning to PhotoAlbum
     var droppedPin : Pin!
     
+    var stack: CoreDataStack!
+    
+    // MARK: Properties
+    
+    var fetchedResultsController : NSFetchedResultsController<NSFetchRequestResult>? {
+        didSet {
+            // Whenever the frc changes, we execute the search
+            fetchedResultsController?.delegate = self
+            executeSearch()
+        }
+    }
+    
+    // MARK: Initializers
+    /*
+    init(fetchedResultsController fc : NSFetchedResultsController<NSFetchRequestResult>) {
+        fetchedResultsController = fc
+        super.init()
+    }
+    */
+    // Do not worry about this initializer. I has to be implemented
+    // because of the way Swift interfaces with an Objective C
+    // protocol called NSArchiving. It's not relevant.
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .Plain, target: self, action: "editAction")
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(TravelLoactionsMapViewController.editAction))
         
         // method for getting the map's state before app exited
         restoreMapRegion(false)
         
         // long press gesture recognizer instance
-        let longPressGR = UILongPressGestureRecognizer(target: self, action: "longTap:")
+        let longPressGR = UILongPressGestureRecognizer(target: self, action: #selector(TravelLoactionsMapViewController.longTap(_:)))
         mapView.addGestureRecognizer(longPressGR)
         
         // this class is MKMapViewDelegate
         self.mapView.delegate = self
         
-        do {
-            try fetchedResultsController.performFetch()
-        } catch _ {
-        }
-        // this class is NSFetchedResultsControllerDelegate
-        fetchedResultsController.delegate = self
+        
+        // Get the stack
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        stack = delegate.stack
+        
+        // Create a fetchrequest
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
+        fr.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        // Create the FetchedResultsController
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
         
         // add annotations from Core Data
         self.createAnnotations()
@@ -59,13 +90,13 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         if(self.editMode){
             
             self.navigationItem.rightBarButtonItem?.title = "Edit"
-            UIView.animateWithDuration(0.2, animations: {
+            UIView.animate(withDuration: 0.2, animations: {
             self.mapView.frame.origin.y += self.tapPinsLabel.frame.height
             })
         
         } else {
             self.navigationItem.rightBarButtonItem?.title = "Done"
-            UIView.animateWithDuration(0.2, animations: {
+            UIView.animate(withDuration: 0.2, animations: {
             self.mapView.frame.origin.y -= self.tapPinsLabel.frame.height
             })
 
@@ -76,30 +107,27 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
-    var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance().managedObjectContext
-    }
-    
+    /*
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
         
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-            managedObjectContext: self.sharedContext,
+            managedObjectContext: stack.context,
             sectionNameKeyPath: nil,
             cacheName: nil)
         
         return fetchedResultsController
         
         }()
-    
+  */
     func createAnnotations(){
         
         var annotations = [Pin]()
         
-        if let locations = fetchedResultsController.fetchedObjects {
+        if let locations = fetchedResultsController?.fetchedObjects {
             for location in locations {
                 annotations.append(location as! Pin)
             }
@@ -110,43 +138,54 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         self.mapView.addAnnotations(annotations)
     }
 
+ // MARK: - CoreData Fetches
+    func executeSearch() {
+        if let fc = fetchedResultsController {
+            do {
+                try fc.performFetch()
+            } catch let e as NSError {
+                print("Error while trying to perform a search: \n\(e)\n\(String(describing: fetchedResultsController))")
+            }
+        }
+    }
+    
      // MARK: - Long Tap
     
-    func longTap(gestureRecognizer:UIGestureRecognizer) {
+    func longTap(_ gestureRecognizer:UIGestureRecognizer) {
         // handle long tap if edit mode is not active
         if !self.editMode{
             
             // coordinates of a point the user touched on the map
-            let touchPoint = gestureRecognizer.locationInView(self.mapView)
-            let newCoord:CLLocationCoordinate2D = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
+            let touchPoint = gestureRecognizer.location(in: self.mapView)
+            let newCoord:CLLocationCoordinate2D = mapView.convert(touchPoint, toCoordinateFrom: self.mapView)
             
             switch gestureRecognizer.state {
-            case .Began:
+            case .began:
                 // create a pin
                 var locationDictionary = [String : AnyObject]()
-                locationDictionary[Pin.Keys.latitude] = newCoord.latitude
-                locationDictionary[Pin.Keys.longitude] = newCoord.longitude
-                self.droppedPin = Pin(dictionary: locationDictionary, context: sharedContext)
+                locationDictionary[Pin.Keys.latitude] = newCoord.latitude as AnyObject
+                locationDictionary[Pin.Keys.longitude] = newCoord.longitude as AnyObject
+                self.droppedPin = Pin(dictionary: locationDictionary, context: stack.context)
                 
                 // add the pin to the map
-                dispatch_async(dispatch_get_main_queue(), {
+                DispatchQueue.main.async(execute: {
                     self.mapView.addAnnotation(self.droppedPin)
                 })
-            case .Changed:
-                droppedPin.willChangeValueForKey("coordinate")
+            case .changed:
+                droppedPin.willChangeValue(forKey: "coordinate")
                 droppedPin.safeCoordinate = newCoord
-                droppedPin.didChangeValueForKey("coordinate")
+                droppedPin.didChangeValue(forKey: "coordinate")
                 
-            case .Ended:
+            case .ended:
                 // prefetch images
                 FlickrClient.sharedInstance().getPhotos(self.droppedPin){(result, error) in
                     if error == nil {
                         
                         // Parse the array of photos dictionaries
-                        dispatch_async(dispatch_get_main_queue()){
+                        DispatchQueue.main.async{
                             _ = result?.map() {(dictionary: [String : AnyObject]) -> Photo in
                                 
-                                let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.sharedContext)
+                                let photo = Photo(dictionary: dictionary, pin: self.droppedPin, context: self.fetchedResultsController!.managedObjectContext)
                                 // set the relationship
                                 //photo.pin = self.droppedPin
                                 
@@ -154,13 +193,19 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                                     
                                     if error == nil {
                                         
-                                        dispatch_async(dispatch_get_main_queue(), {
-                                            CoreDataStackManager.sharedInstance().saveContext()
+                                        DispatchQueue.main.async(execute: {
+                                            /*
+                                            do {
+                                                    try self.stack.saveContext()
+                                            } catch {
+                                                print("Error: \(String(describing: error.localizedDescription))")
+                                            }
+                                            */
                                         })
                                         
                                     } else {
                                         // We won't alert the user
-                                        print("Error: \(error?.localizedDescription)")
+                                        print("Error: \(String(describing: error?.localizedDescription))")
                                     }
                                 }
                                 
@@ -169,13 +214,19 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
                         }
                     } else {
                         // Error, e.g. the pin has no images or the internet connection is offline
-                        print("Error: \(error?.localizedDescription)")
+                        print("Error: \(String(describing: error?.localizedDescription))")
                         self.showAlertView(error?.localizedDescription)
                     }
                 }
                 // save data
-                dispatch_async(dispatch_get_main_queue()){
-                    CoreDataStackManager.sharedInstance().saveContext()
+                DispatchQueue.main.async{
+                    /*
+                    do {
+                        try self.stack.saveContext()
+                    } catch {
+                        print("Error: \(String(describing: error.localizedDescription))")
+                    }
+                    */
                 }
             default:
                 return
@@ -188,11 +239,11 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - Navigation
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     // Get the new view controller using segue.destinationViewController.
     // Pass the selected object to the new view controller.
         if(segue.identifier == "showPhotos"){
-            let photoAlbumVC:PhotoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
+            let photoAlbumVC:PhotoAlbumViewController = segue.destination as! PhotoAlbumViewController
             photoAlbumVC.selectedPin = self.droppedPin
         }
     
@@ -201,19 +252,19 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - Map delegate methods
     
-    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         saveMapRegion()
     }
     
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseId = "pin"
         
-        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
         
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.animatesDrop = true
-            pinView!.pinTintColor = UIColor.redColor()
+            pinView!.pinTintColor = UIColor.red
         } else {
             pinView!.annotation = annotation
         }
@@ -221,7 +272,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         return pinView
     }
     
-    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         // annotation (pin) selection is enabled only in edit mode
         if self.editMode {
  
@@ -231,9 +282,15 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
             print("pinToDelete:\(pinToDelete)")
             
             // remove from context
-            sharedContext.deleteObject(pinToDelete)
-            dispatch_async(dispatch_get_main_queue()){
-            CoreDataStackManager.sharedInstance().saveContext()
+            fetchedResultsController?.managedObjectContext.delete(pinToDelete)
+            DispatchQueue.main.async{
+                /*
+                do {
+                    try self.stack.saveContext()
+                } catch {
+                    print("Error: \(String(describing: error.localizedDescription))")
+                }
+                */
             }
             
         } else {
@@ -242,7 +299,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
             self.droppedPin = touchedPin
             mapView.deselectAnnotation(touchedPin, animated: false)
             // segue to the photos view
-            self.performSegueWithIdentifier("showPhotos", sender: self)
+            self.performSegue(withIdentifier: "showPhotos", sender: self)
             
         }
     }
@@ -252,14 +309,14 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
 
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         let pin = anObject as! Pin
         
         switch (type){
-        case .Insert:
+        case .insert:
             mapView.addAnnotation(pin)
             
-        case .Delete:
+        case .delete:
             mapView.removeAnnotation(pin)
             
         default:
@@ -272,9 +329,9 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // A convenient property
     var filePath : String {
-        let manager = NSFileManager.defaultManager()
-        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first! as NSURL
-        return url.URLByAppendingPathComponent("mapRegionArchive").path!
+        let manager = FileManager.default
+        let url = manager.urls(for: .documentDirectory, in: .userDomainMask).first! as URL
+        return url.appendingPathComponent("mapRegionArchive").path
     }
     
     func saveMapRegion() {
@@ -294,11 +351,11 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
         NSKeyedArchiver.archiveRootObject(dictionary, toFile: filePath)
     }
     
-    func restoreMapRegion(animated: Bool) {
+    func restoreMapRegion(_ animated: Bool) {
         
         // if we can unarchive a dictionary, we will use it to set the map back to its
         // previous center and span
-        if let regionDictionary = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath) as? [String : AnyObject] {
+        if let regionDictionary = NSKeyedUnarchiver.unarchiveObject(withFile: filePath) as? [String : AnyObject] {
             
             let longitude = regionDictionary["longitude"] as! CLLocationDegrees
             let latitude = regionDictionary["latitude"] as! CLLocationDegrees
@@ -316,17 +373,17 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     // MARK: - Helpers
     
-    func showAlertView(errorMessage: String?) {
+    func showAlertView(_ errorMessage: String?) {
         
-        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .Alert)
+        let alertController = UIAlertController(title: nil, message: errorMessage!, preferredStyle: .alert)
         
-        let cancelAction = UIAlertAction(title: "Dismiss", style: .Cancel) {(action) in
+        let cancelAction = UIAlertAction(title: "Dismiss", style: .cancel) {(action) in
             
             
         }
         alertController.addAction(cancelAction)
         
-        self.presentViewController(alertController, animated: true){
+        self.present(alertController, animated: true){
             
         }
         
