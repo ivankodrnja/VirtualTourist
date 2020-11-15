@@ -85,7 +85,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
 
-    func editAction() {
+    @objc func editAction() {
    
         if(self.editMode){
             
@@ -151,7 +151,7 @@ class TravelLoactionsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
      // MARK: - Long Tap
     
-    func longTap(_ gestureRecognizer:UIGestureRecognizer) {
+    @objc func longTap(_ gestureRecognizer:UIGestureRecognizer) {
         // handle long tap if edit mode is not active
         if !self.editMode{
             
