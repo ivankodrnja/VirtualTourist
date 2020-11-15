@@ -181,7 +181,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         // If the cell is "selected" it's color panel is grayed out
         // we use the Swift `find` function to see if the indexPath is in the array
         
-        if let _ = selectedIndexes.index(of: indexPath) {
+        if let _ = selectedIndexes.firstIndex(of: indexPath) {
             cell.imageView.alpha = 0.5
         } else {
             cell.imageView.alpha = 1.0
@@ -246,7 +246,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
 
         
         // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
-        if let index = selectedIndexes.index(of: indexPath) {
+        if let index = selectedIndexes.firstIndex(of: indexPath) {
             selectedIndexes.remove(at: index)
         } else {
             selectedIndexes.append(indexPath)
