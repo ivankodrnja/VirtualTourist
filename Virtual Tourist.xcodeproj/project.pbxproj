@@ -243,6 +243,7 @@
 				TargetAttributes = {
 					83FF8EA11BA3E42500435A45 = {
 						CreatedOnToolsVersion = 6.3.1;
+						DevelopmentTeam = RZJ38BZUN6;
 						LastSwiftMigration = 1210;
 						SystemCapabilities = {
 							com.apple.Maps.iOS = {
@@ -252,6 +253,7 @@
 					};
 					83FF8EB61BA3E42500435A45 = {
 						CreatedOnToolsVersion = 6.3.1;
+						DevelopmentTeam = RZJ38BZUN6;
 						LastSwiftMigration = 1210;
 						TestTargetID = 83FF8EA11BA3E42500435A45;
 					};
@@ -470,6 +472,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = RZJ38BZUN6;
 				INFOPLIST_FILE = "Virtual Tourist/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "hr.2plus2.$(PRODUCT_NAME:rfc1034identifier)";
@@ -486,6 +489,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = RZJ38BZUN6;
 				INFOPLIST_FILE = "Virtual Tourist/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "hr.2plus2.$(PRODUCT_NAME:rfc1034identifier)";
@@ -500,6 +504,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = RZJ38BZUN6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -522,6 +527,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = RZJ38BZUN6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
